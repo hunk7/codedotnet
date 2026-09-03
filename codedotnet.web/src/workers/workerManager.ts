@@ -53,10 +53,11 @@ export class WorkerManager {
     this.setState('Initializing')
 
     return new Promise<void>((resolve, reject) => {
-      const worker = new Worker(
-        new URL('/dotnet-worker/wwwroot/worker.js', import.meta.url),
-        { type: 'module' },
-      )
+      // Intentionally a plain string path (not `new URL(..., import.meta.url)`): worker.js is a
+      // pre-built static asset published by codedotnet.compiler and served from public/, so it
+      // must NOT be picked up and bundled by Vite's module-worker static analysis.
+      const workerUrl = `${import.meta.env.BASE_URL}dotnet-worker/wwwroot/worker.js`
+      const worker = new Worker(workerUrl, { type: 'module' })
 
       const handleMessage = (event: MessageEvent<WorkerResponseEnvelope>): void => {
         const message = event.data
