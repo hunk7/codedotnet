@@ -1,9 +1,13 @@
 import {
   PROTOCOL_VERSION,
+  type CompileAndRunResponsePayload,
   type RuntimeInformation,
   type WorkerRequestEnvelope,
   type WorkerResponseEnvelope,
 } from './protocol'
+
+/** Default maximum execution duration in milliseconds (FR-068). */
+export const DEFAULT_EXECUTION_TIMEOUT_MS = 5_000
 
 export type WorkerManagerState =
   | 'Uninitialized'
@@ -116,7 +120,33 @@ export class WorkerManager {
     return this.send('GetRuntimeInformation') as Promise<RuntimeInformation>
   }
 
-  private send(operation: WorkerRequestEnvelope['operation']): Promise<unknown> {
+  /**
+   * Compiles and runs the provided source snapshot (FR-040/FR-075). Only one active
+   * compile/run request is allowed at a time; the worker is hard-terminated and replaced
+   * if the execution exceeds `timeoutMs` (FR-066 through FR-069).
+   */
+  async compileAndRun(
+    source: string,
+    stdin: string,
+    timeoutMs: number = DEFAULT_EXECUTION_TIMEOUT_MS,
+  ): Promise<CompileAndRunResponsePayload> {
+    const requestPromise = this.send('CompileAndRun', { source, stdin }) as Promise<CompileAndRunResponsePayload>
+
+    const timeoutPromise = new Promise<CompileAndRunResponsePayload>((_resolve, reject) => {
+      setTimeout(() => {
+        this.stop()
+        void this.initialize()
+        reject(new Error('Execution timed out'))
+      }, timeoutMs)
+    })
+
+    return Promise.race([requestPromise, timeoutPromise])
+  }
+
+  private send<TPayload = undefined>(
+    operation: WorkerRequestEnvelope['operation'],
+    payload?: TPayload,
+  ): Promise<unknown> {
     if (!this.worker || this.state !== 'Ready') {
       return Promise.reject(new Error(`Worker is not ready (state: ${this.state})`))
     }
@@ -129,10 +159,11 @@ export class WorkerManager {
       this.pending.set(requestId, { resolve, reject })
     })
 
-    const request: WorkerRequestEnvelope = {
+    const request: WorkerRequestEnvelope<TPayload> = {
       protocolVersion: PROTOCOL_VERSION,
       requestId,
       operation,
+      payload,
     }
 
     this.worker.postMessage(request)
@@ -149,6 +180,10 @@ export class WorkerManager {
     this.setState('Stopping')
     this.worker.terminate()
     this.worker = null
+
+    for (const request of this.pending.values()) {
+      request.reject(new Error('Worker stopped'))
+    }
     this.pending.clear()
     this.activeRequestId = null
     this.setState('Stopped')

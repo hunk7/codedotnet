@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace CodeDotNet.Compiler;
 
@@ -21,7 +22,9 @@ public partial class RuntimeInfo
             EnvironmentVersion: Environment.Version.ToString(),
             OSArchitecture: RuntimeInformation.OSArchitecture.ToString(),
             ProcessArchitecture: RuntimeInformation.ProcessArchitecture.ToString(),
-            RuntimeIdentifier: RuntimeInformation.RuntimeIdentifier);
+            RuntimeIdentifier: RuntimeInformation.RuntimeIdentifier,
+            RoslynVersion: typeof(CSharpCompilation).Assembly.GetName().Version?.ToString() ?? "unknown",
+            LanguageVersion: LanguageVersion.Latest.ToDisplayString());
 
         return JsonSerializer.Serialize(info, RuntimeInfoJsonContext.Default.RuntimeInformationPayload);
     }
@@ -32,7 +35,9 @@ internal sealed record RuntimeInformationPayload(
     string EnvironmentVersion,
     string OSArchitecture,
     string ProcessArchitecture,
-    string RuntimeIdentifier);
+    string RuntimeIdentifier,
+    string RoslynVersion,
+    string LanguageVersion);
 
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 [JsonSerializable(typeof(RuntimeInformationPayload))]

@@ -1,0 +1,229 @@
+name: CI / Deploy
+
+# Implements docs §18 CI/CD requirements:
+#  - §18.1 PR validation: restore, typecheck, lint, format check, frontend + .NET tests, production
+#    build, and a sanity check that required static assets exist in the build output.
+#  - §18.2 Main-branch deploy: repeat the same checks, publish the codedotnet.compiler browser-wasm
+#    worker, copy its assets into codedotnet.web/public, build the frontend with the GitHub Pages
+#    subpath base, verify the output, then upload + deploy a Pages artifact and report the URL.
+#  - §18.4 Artifact-size report: summarize the size of the production build output for visibility
+#    into bundle-size regressions (see the Monaco chunk-size warning noted in build output).
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  NODE_VERSION: '22.x'
+
+jobs:
+  validate:
+    name: Validate (build, lint, test)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: codedotnet.web/package-lock.json
+
+      - name: Restore .NET dependencies
+        run: dotnet restore codedotnet.compiler/codedotnet.compiler.csproj
+
+      - name: Build codedotnet.compiler (browser-wasm)
+        run: dotnet build codedotnet.compiler/codedotnet.compiler.csproj -c Release --no-restore
+
+      - name: Run .NET tests (if any test projects exist)
+        shell: pwsh
+        run: |
+          $testProjects = Get-ChildItem -Path . -Recurse -Filter '*.csproj' |
+            Where-Object { (Get-Content $_.FullName -Raw) -match 'Microsoft\.NET\.Test\.Sdk' }
+          if ($testProjects.Count -eq 0) {
+            Write-Host 'No .NET test projects found; skipping dotnet test.'
+          } else {
+            foreach ($proj in $testProjects) {
+              dotnet test $proj.FullName -c Release
+              if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            }
+          }
+
+      - name: Install frontend dependencies
+        working-directory: codedotnet.web
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: codedotnet.web
+        run: npm run typecheck
+
+      - name: Lint
+        working-directory: codedotnet.web
+        run: npm run lint
+
+      - name: Format check
+        working-directory: codedotnet.web
+        run: npm run format:check
+
+      - name: Frontend tests
+        working-directory: codedotnet.web
+        run: npm test
+
+      - name: Production build (root base path)
+        working-directory: codedotnet.web
+        run: npm run build
+
+      - name: Verify required build assets exist
+        shell: pwsh
+        run: |
+          $dist = 'codedotnet.web/dist'
+          $required = @('index.html')
+          foreach ($file in $required) {
+            $path = Join-Path $dist $file
+            if (-not (Test-Path $path)) {
+              Write-Error "Required asset missing from build output: $path"
+              exit 1
+            }
+          }
+          $assetsDir = Join-Path $dist 'assets'
+          if (-not (Test-Path $assetsDir) -or (Get-ChildItem $assetsDir -Filter '*.js').Count -eq 0) {
+            Write-Error 'No JavaScript assets found in dist/assets.'
+            exit 1
+          }
+          Write-Host 'Required build assets verified.'
+
+  deploy:
+    name: Publish worker, build for Pages, and deploy
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: codedotnet.web/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: codedotnet.web
+        run: npm ci
+
+      - name: Publish codedotnet.compiler worker and copy assets (Release)
+        working-directory: codedotnet.web
+        run: npm run build:worker:release
+
+      - name: Typecheck
+        working-directory: codedotnet.web
+        run: npm run typecheck
+
+      - name: Lint
+        working-directory: codedotnet.web
+        run: npm run lint
+
+      - name: Frontend tests
+        working-directory: codedotnet.web
+        run: npm test
+
+      - name: Determine Pages base path
+        id: base-path
+        shell: pwsh
+        run: |
+          $repo = "${{ github.event.repository.name }}"
+          "base=/$repo/" >> $env:GITHUB_OUTPUT
+
+      - name: Build for GitHub Pages subpath
+        working-directory: codedotnet.web
+        env:
+          VITE_BASE_PATH: ${{ steps.base-path.outputs.base }}
+          VITE_COMMIT_SHA: ${{ github.sha }}
+        run: npm run build
+
+      - name: Verify required build assets exist
+        shell: pwsh
+        run: |
+          $dist = 'codedotnet.web/dist'
+          $indexPath = Join-Path $dist 'index.html'
+          if (-not (Test-Path $indexPath)) {
+            Write-Error "Required asset missing from build output: $indexPath"
+            exit 1
+          }
+          $indexContent = Get-Content $indexPath -Raw
+          $expectedBase = "${{ steps.base-path.outputs.base }}"
+          if ($indexContent -notmatch [regex]::Escape($expectedBase)) {
+            Write-Error "index.html does not reference the expected base path '$expectedBase'."
+            exit 1
+          }
+          $workerDir = Join-Path $dist 'dotnet-worker'
+          if (-not (Test-Path $workerDir)) {
+            Write-Error "Published worker assets missing from build output: $workerDir"
+            exit 1
+          }
+          $workerScript = Get-ChildItem -Path $workerDir -Recurse -Filter 'worker.js' -ErrorAction SilentlyContinue
+          if (-not $workerScript) {
+            Write-Error "worker.js not found under $workerDir"
+            exit 1
+          }
+          Write-Host 'Required build assets and base path verified.'
+
+      - name: Report build artifact size
+        shell: pwsh
+        run: |
+          $dist = 'codedotnet.web/dist'
+          $items = Get-ChildItem -Path $dist -Recurse -File
+          $totalBytes = ($items | Measure-Object -Property Length -Sum).Sum
+          $totalMb = [Math]::Round($totalBytes / 1MB, 2)
+          Write-Host "Total build output size: $totalMb MB across $($items.Count) files"
+          $items |
+            Sort-Object Length -Descending |
+            Select-Object -First 10 @{N='SizeKB';E={[Math]::Round($_.Length/1KB,1)}}, FullName |
+            Format-Table | Out-String | Write-Host
+          "### Build artifact size`n`nTotal: **$totalMb MB** across $($items.Count) files" >> $env:GITHUB_STEP_SUMMARY
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: codedotnet.web/dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Report deployed URL
+        shell: pwsh
+        run: |
+          "Deployed to: ${{ steps.deployment.outputs.page_url }}" >> $env:GITHUB_STEP_SUMMARY

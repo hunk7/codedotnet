@@ -30,7 +30,7 @@ try {
 self.addEventListener(
   'message',
   async function (event) {
-    const { requestId, operation } = event.data
+    const { requestId, operation, payload: requestPayload } = event.data
 
     try {
       if (!assemblyExports) {
@@ -42,6 +42,13 @@ self.addEventListener(
       switch (operation) {
         case 'GetRuntimeInformation': {
           const json = assemblyExports.CodeDotNet.Compiler.RuntimeInfo.GetRuntimeInformation()
+          payload = JSON.parse(json)
+          break
+        }
+        case 'CompileAndRun': {
+          const source = (requestPayload && requestPayload.source) || ''
+          const stdin = (requestPayload && requestPayload.stdin) || ''
+          const json = assemblyExports.CodeDotNet.Compiler.CompileAndRunHost.CompileAndRun(source, stdin)
           payload = JSON.parse(json)
           break
         }
