@@ -1,1 +1,3 @@
-<Solution />
+<Solution>
+  <Project Path="codedotnet.compiler/codedotnet.compiler.csproj" />
+</Solution>

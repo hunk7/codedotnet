@@ -14,6 +14,9 @@ TestResults/
 **/.vite/
 **/coverage/
 
+# Generated worker assets (published by codedotnet.compiler)
+codedotnet.web/public/dotnet-worker/
+
 # Playwright
 **/playwright-report/
 **/test-results/
