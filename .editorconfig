@@ -1,0 +1,40 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+
+# C#
+[*.cs]
+indent_size = 4
+
+# TypeScript / JavaScript
+[*.{ts,tsx,js,jsx}]
+indent_size = 2
+
+# JSON
+[*.json]
+indent_size = 2
+
+# YAML
+[*.{yml,yaml}]
+indent_size = 2
+
+# CSS
+[*.{css,scss}]
+indent_size = 2
+
+# HTML
+[*.html]
+indent_size = 2
+
+# Markdown may use trailing spaces intentionally for hard line breaks
+[*.md]
+trim_trailing_whitespace = false
+
+# Project/solution files
+[*.{csproj,sln,slnx,props,targets}]
+indent_size = 2
