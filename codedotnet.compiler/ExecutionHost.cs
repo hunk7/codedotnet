@@ -44,7 +44,21 @@ internal static class ExecutionHost
 
         var originalOut = Console.Out;
         var originalErr = Console.Error;
-        var originalIn = Console.In;
+
+        // NOTE: on browser-wasm, the Console.In *getter* throws PlatformNotSupportedException
+        // (Arg_PlatformNotSupported) because it tries to lazily create a real stdin stream,
+        // which does not exist in the browser. Console.SetIn(...) itself is safe (it just
+        // stores a field), so we never read the original reader back - there is nothing
+        // meaningful to restore to on this platform.
+        TextReader? originalIn = null;
+        try
+        {
+            originalIn = Console.In;
+        }
+        catch (PlatformNotSupportedException)
+        {
+            originalIn = null;
+        }
 
         var writer = new CallbackTextWriter(AppendOutput);
         var reader = new StringReader(stdin ?? string.Empty);
@@ -95,7 +109,11 @@ internal static class ExecutionHost
         {
             Console.SetOut(originalOut);
             Console.SetError(originalErr);
-            Console.SetIn(originalIn);
+
+            if (originalIn is not null)
+            {
+                Console.SetIn(originalIn);
+            }
         }
 
         return new ExecutionResult(

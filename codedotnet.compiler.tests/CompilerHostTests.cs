@@ -100,4 +100,28 @@ public class CompilerHostTests
         Assert.True(result.Success);
         Assert.Contains(result.Diagnostics, d => d.Severity == "Warning");
     }
+
+    [Fact]
+    public void Compile_RunsRepeatedlyWithoutInternalCompilerError()
+    {
+        // Regression for the first-compile crash where a Lazy<T>-cached reference list
+        // built from Assembly.Location (empty on browser-wasm, since assemblies are loaded
+        // from an in-memory bundle rather than disk) would throw once via
+        // MetadataReference.CreateFromFile("") and then keep surfacing as CDN000
+        // "Internal compiler error" on every subsequent call. References are now built
+        // directly from in-memory assembly metadata (Assembly.TryGetRawMetadata), which does
+        // not depend on a backing file path at all.
+        const string source = """
+            using System;
+            Console.WriteLine("Hello, codedotnet!");
+            """;
+
+        for (var i = 0; i < 3; i++)
+        {
+            var result = CompilerHost.Compile(source);
+
+            Assert.True(result.Success, string.Join(Environment.NewLine, result.Diagnostics.Select(d => d.Message)));
+            Assert.NotNull(result.AssemblyBytes);
+        }
+    }
 }

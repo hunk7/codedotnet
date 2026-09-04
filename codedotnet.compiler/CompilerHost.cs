@@ -12,7 +12,18 @@ internal static class CompilerHost
     private const string AssemblyName = "codedotnet-user-program";
 
     /// <summary>Curated reference assemblies supporting the FR-043 surface area.</summary>
-    private static readonly Lazy<MetadataReference[]> References = new(BuildReferences);
+    /// <remarks>
+    /// <see cref="LazyThreadSafetyMode.PublicationOnly"/> is used because the browser-wasm host
+    /// does not support blocking waits on a lock's monitor ("Cannot wait on monitors on this
+    /// runtime"), which is what the default <see cref="LazyThreadSafetyMode.ExecutionAndPublication"/>
+    /// mode uses when the value is accessed concurrently. PublicationOnly still guarantees a
+    /// single published result but never blocks a thread waiting on another; at worst the
+    /// factory runs more than once, which is safe here since <see cref="BuildReferences"/> is
+    /// pure and side-effect free. Unlike <see cref="LazyThreadSafetyMode.None"/>, it also remains
+    /// safe under genuine multi-threaded access (e.g. parallel test execution) instead of
+    /// throwing a reentrancy exception.
+    /// </remarks>
+    private static readonly Lazy<MetadataReference[]> References = new(BuildReferences, LazyThreadSafetyMode.PublicationOnly);
 
     public static CompileResult Compile(string source)
     {
@@ -31,7 +42,12 @@ internal static class CompilerHost
             optimizationLevel: OptimizationLevel.Release,
             warningLevel: 4,
             allowUnsafe: false,
-            deterministic: true);
+            deterministic: true,
+            // Roslyn's default (true) parallelizes binding/diagnostics via the thread pool.
+            // The single-threaded browser-wasm runtime cannot service that parallelism and
+            // throws "Cannot wait on monitors on this runtime" the moment any real contention
+            // occurs, so concurrent build must be disabled here.
+            concurrentBuild: false);
 
         var compilation = CSharpCompilation.Create(
             AssemblyName,
@@ -85,64 +101,27 @@ internal static class CompilerHost
 
     private static MetadataReference[] BuildReferences()
     {
-        // FR-043: a documented, curated set of framework references. In the single-file
-        // browser-wasm publish, framework assemblies are available via the trusted platform
-        // assemblies list exposed by the runtime.
-        var trustedAssembliesPaths = ((string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES"))
-            ?.Split(Path.PathSeparator) ?? [];
-
-        var requiredAssemblyNames = new[]
-        {
-            "System.Private.CoreLib",
-            "System.Runtime",
-            "System.Collections",
-            "System.Collections.Generic",
-            "System.Linq",
-            "System.Numerics",
-            "System.Numerics.Vectors",
-            "System.Text",
-            "System.Text.Json",
-            "System.Text.RegularExpressions",
-            "System.Threading",
-            "System.Threading.Tasks",
-            "System.Console",
-            "System.Runtime.Extensions",
-            "System.Runtime.Numerics",
-            "System.ObjectModel",
-            "System.Linq.Expressions",
-            "netstandard",
-        };
-
-        var references = new List<MetadataReference>();
-
-        foreach (var name in requiredAssemblyNames)
-        {
-            var path = trustedAssembliesPaths.FirstOrDefault(p =>
-                string.Equals(Path.GetFileNameWithoutExtension(p), name, StringComparison.OrdinalIgnoreCase));
-
-            if (path is not null && File.Exists(path))
-            {
-                references.Add(MetadataReference.CreateFromFile(path));
-            }
-        }
-
-        if (references.Count == 0)
-        {
-            // Fallback for hosts that do not populate TRUSTED_PLATFORM_ASSEMBLIES (e.g. some
-            // browser-wasm configurations): reference the currently loaded core assemblies.
-            var loadedAssemblies = new[]
-            {
-                typeof(object).Assembly,
-                typeof(Console).Assembly,
-                typeof(System.Linq.Enumerable).Assembly,
-                typeof(System.Text.Json.JsonSerializer).Assembly,
-                typeof(System.Collections.Generic.List<>).Assembly,
-            }.Distinct();
-
-            references.AddRange(loadedAssemblies.Select(a => MetadataReference.CreateFromFile(a.Location)));
-        }
-
-        return references.ToArray();
+        // FR-043: a documented, curated set of framework references.
+        //
+        // NOTE: on the browser-wasm host, assemblies are loaded from an in-memory bundle rather
+        // than disk, so Assembly.Location is empty for every loaded assembly and
+        // TRUSTED_PLATFORM_ASSEMBLIES is typically not populated at all. Building references from
+        // file paths (via MetadataReference.CreateFromFile) is therefore unreliable in the
+        // browser and was the root cause of the "Internal compiler error: Argument_EmptyString"
+        // crash reported on the very first compile (MetadataReference.CreateFromFile("") throws
+        // because Location resolves to an empty string).
+        //
+        // Instead, use the Basic.Reference.Assemblies package, which embeds pre-built reference
+        // assembly bytes as resources and exposes them as ready-to-use MetadataReference
+        // instances. This has no dependency on the file system or on which assemblies happen to
+        // already be loaded into the current process, so it works reliably in browser-wasm.
+        //
+        // IMPORTANT: this must match the worker's own TargetFramework (net10.0). Using the Net90
+        // reference set here caused every compiled program to bind to "System.Runtime,
+        // Version=9.0.0.0", while the actual runtime hosting ExecutionHost.Run is .NET 10
+        // (Version=10.0.0.0), so Assembly.Load/EntryPoint resolution failed with
+        // FileNotFoundException at execution time even though compilation succeeded.
+        return [.. Basic.Reference.Assemblies.Net100.References.All];
     }
 }
 

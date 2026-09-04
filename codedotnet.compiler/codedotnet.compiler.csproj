@@ -10,10 +10,24 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <PublishDir>../codedotnet.web/public/dotnet-worker</PublishDir>
     <WasmEnableExceptionHandling>true</WasmEnableExceptionHandling>
+    <!--
+      User programs are compiled dynamically at runtime (Roslyn) and loaded via
+      Assembly.Load + reflection (ExecutionHost.Run). The IL trimmer only sees static
+      references from CompilerHost/ExecutionHost themselves, so it cannot know which
+      framework assemblies the *emitted* user assembly will need (it could reference
+      almost anything in the curated FR-043 surface, e.g. System.Runtime, System.Linq,
+      System.Collections, etc.). With trimming enabled, PublishTrimmed removes those
+      "unused" framework facades (notably System.Runtime), causing every compiled
+      program to fail at load time with FileNotFoundException. Disable trimming so the
+      full framework the reference assemblies expose stays available at runtime.
+    -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <RunAOTCompilation>false</RunAOTCompilation>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+    <PackageReference Include="Basic.Reference.Assemblies.Net100" Version="1.8.11" />
   </ItemGroup>
 
 </Project>

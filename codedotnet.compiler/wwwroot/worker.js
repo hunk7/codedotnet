@@ -23,7 +23,8 @@ try {
     protocolVersion: 1,
     requestId: null,
     operation: 'RuntimeError',
-    payload: { message: startupError },
+    error: startupError,
+    payload: null,
   })
 }
 

@@ -4,7 +4,10 @@ import { useEffect, useImperativeHandle, useRef, forwardRef } from 'react'
 // Relative node_modules paths are used because this monaco-editor version's package.json
 // `exports` map only exposes `.` and TypeScript cannot resolve the deep subpaths otherwise.
 import * as monaco from '../../node_modules/monaco-editor/esm/vs/editor/editor.api.js'
-import '../../node_modules/monaco-editor/esm/vs/languages/definitions/csharp/csharp.js'
+// Registers the 'csharp' language id (Monarch tokenizer + language configuration) with Monaco.
+// Importing csharp.js directly only defines the tokenizer/config objects without registering
+// them, which left the editor rendering plain, unhighlighted text.
+import '../../node_modules/monaco-editor/esm/vs/languages/definitions/csharp/register.js'
 import type { EditorSettings } from '../editor/editorSettings'
 
 // Vite base-path-safe Monaco worker resolution (FR/§17): only the editor's core worker is
@@ -19,6 +22,45 @@ self.MonacoEnvironment = {
     })
   },
 }
+
+// Monaco's built-in theme ids are 'vs' (light), 'vs-dark' and 'hc-black'/'hc-light' - there is
+// no built-in 'vs-light'. Passing 'vs-light' straight to monaco.editor.create/setTheme is
+// silently ignored (unknown theme id), which left the editor stuck on the wrong colors whenever
+// the light theme was selected. We also define custom themes here so the light/dark palettes
+// match the OneCompiler reference UI exactly instead of Monaco's stock colors.
+monaco.editor.defineTheme('codedotnet-light', {
+  base: 'vs',
+  inherit: true,
+  rules: [
+    { token: 'comment', foreground: '008000' },
+    { token: 'keyword', foreground: '0000FF' },
+    { token: 'string', foreground: 'A31515' },
+    { token: 'number', foreground: '098658' },
+    { token: 'type', foreground: '267F99' },
+    { token: 'identifier', foreground: '000000' },
+  ],
+  colors: {
+    'editor.background': '#FFFFFF',
+    'editor.foreground': '#1E1E1E',
+    'editorLineNumber.foreground': '#237893',
+    'editorLineNumber.activeForeground': '#0B216F',
+    'editor.selectionBackground': '#ADD6FF',
+    'editorCursor.foreground': '#000000',
+    'editorIndentGuide.background': '#D3D3D3',
+  },
+})
+
+monaco.editor.defineTheme('codedotnet-dark', {
+  base: 'vs-dark',
+  inherit: true,
+  rules: [],
+  colors: {},
+})
+
+const THEME_ID_MAP = {
+  'vs-light': 'codedotnet-light',
+  'vs-dark': 'codedotnet-dark',
+} as const
 
 export interface MonacoEditorHandle {
   getValue: () => string
@@ -55,7 +97,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(function 
 
     const editor = monaco.editor.create(containerRef.current, {
       model,
-      theme,
+      theme: THEME_ID_MAP[theme],
       automaticLayout: true,
       minimap: { enabled: false },
       fontSize: 14,
@@ -80,7 +122,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(function 
   }, [])
 
   useEffect(() => {
-    monaco.editor.setTheme(theme)
+    monaco.editor.setTheme(THEME_ID_MAP[theme])
   }, [theme])
 
   useEffect(() => {

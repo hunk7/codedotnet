@@ -31,6 +31,35 @@ import {
   type Theme,
 } from './editor/editorSettings'
 import { detectFeatureSupport, getMissingRequiredFeatures } from './browserSupport'
+import {
+  ClearIcon,
+  DownloadIcon,
+  FocusIcon,
+  FullscreenIcon,
+  InfoIcon,
+  MoonIcon,
+  PlayIcon,
+  ResetIcon,
+  RestoreLayoutIcon,
+  SettingsIcon,
+  StopIcon,
+  SunIcon,
+  SwapIcon,
+  SystemIcon,
+} from './components/icons'
+
+const THEME_CYCLE: Theme[] = ['system', 'vs-dark', 'vs-light']
+
+function cycleTheme(current: Theme): Theme {
+  const index = THEME_CYCLE.indexOf(current)
+  return THEME_CYCLE[(index + 1) % THEME_CYCLE.length]
+}
+
+function ThemeToggleIcon({ theme }: { theme: Theme }) {
+  if (theme === 'vs-dark') return <MoonIcon />
+  if (theme === 'vs-light') return <SunIcon />
+  return <SystemIcon />
+}
 
 type BuildStatus =
   | 'Idle'
@@ -504,47 +533,84 @@ function App() {
         <div className="app-shell__actions">
           <button
             type="button"
+            className="toolbar-button toolbar-button--run"
             onClick={() => void handleRun()}
             disabled={!canRun}
             title="Run (Ctrl/Cmd+Enter)"
           >
-            {isBusy ? 'Running…' : 'Run'}
-          </button>
-          <button type="button" onClick={handleStop} disabled={!canStop} title="Stop (Shift+F5)">
-            Stop
-          </button>
-          <button type="button" onClick={handleClearOutput}>
-            Clear
-          </button>
-          <button type="button" onClick={handleResetProgram}>
-            Reset
-          </button>
-          <button type="button" onClick={togglePaneOrder}>
-            Swap panes
+            {isBusy ? <span className="toolbar-button__spinner" aria-hidden="true" /> : <PlayIcon />}
+            <span>{isBusy ? 'Running…' : 'Run'}</span>
           </button>
           <button
             type="button"
+            className="toolbar-button toolbar-button--stop"
+            onClick={handleStop}
+            disabled={!canStop}
+            title="Stop (Shift+F5)"
+          >
+            <StopIcon />
+            <span>Stop</span>
+          </button>
+          <button type="button" className="toolbar-button" onClick={handleClearOutput}>
+            <ClearIcon />
+            <span>Clear</span>
+          </button>
+          <button type="button" className="toolbar-button" onClick={handleResetProgram}>
+            <ResetIcon />
+            <span>Reset</span>
+          </button>
+          <button type="button" className="toolbar-button" onClick={togglePaneOrder}>
+            <SwapIcon />
+            <span>Swap panes</span>
+          </button>
+          <button
+            type="button"
+            className="toolbar-button"
             onClick={() => setFocusMode((prev) => (prev === 'editor' ? 'none' : 'editor'))}
           >
-            {focusMode === 'editor' ? 'Exit focus' : 'Focus editor'}
+            <FocusIcon />
+            <span>{focusMode === 'editor' ? 'Exit focus' : 'Focus editor'}</span>
           </button>
-          <button type="button" onClick={() => setFocusMode((prev) => (prev === 'io' ? 'none' : 'io'))}>
-            {focusMode === 'io' ? 'Exit focus' : 'Focus I/O'}
+          <button
+            type="button"
+            className="toolbar-button"
+            onClick={() => setFocusMode((prev) => (prev === 'io' ? 'none' : 'io'))}
+          >
+            <FocusIcon />
+            <span>{focusMode === 'io' ? 'Exit focus' : 'Focus I/O'}</span>
           </button>
-          <button type="button" onClick={toggleFullscreen} title="Toggle fullscreen (F11)">
-            {isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+          <button
+            type="button"
+            className="toolbar-button"
+            onClick={toggleFullscreen}
+            title="Toggle fullscreen (F11)"
+          >
+            <FullscreenIcon />
+            <span>{isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}</span>
           </button>
-          <button type="button" onClick={restoreDefaultLayout}>
-            Restore layout
+          <button type="button" className="toolbar-button" onClick={restoreDefaultLayout}>
+            <RestoreLayoutIcon />
+            <span>Restore layout</span>
           </button>
-          <button type="button" onClick={handleDownload}>
-            Download
+          <button type="button" className="toolbar-button" onClick={handleDownload}>
+            <DownloadIcon />
+            <span>Download</span>
           </button>
-          <button type="button" onClick={() => setSettingsOpen(true)}>
-            Settings
+          <button
+            type="button"
+            className="toolbar-button toolbar-button--icon-only"
+            onClick={() => setTheme(cycleTheme(theme))}
+            title={`Theme: ${theme} (click to cycle)`}
+          >
+            <ThemeToggleIcon theme={theme} />
           </button>
-          <button type="button" onClick={() => setAboutOpen(true)}>
-            About
+          <button type="button" className="toolbar-button" onClick={() => setSettingsOpen(true)}>
+            <SettingsIcon />
+            <span>Settings</span>
+          </button>
+          <button type="button" className="toolbar-button" onClick={() => setAboutOpen(true)}>
+            <InfoIcon />
+            <span>About</span>
           </button>
         </div>
       </header>

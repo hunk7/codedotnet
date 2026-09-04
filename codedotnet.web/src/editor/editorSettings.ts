@@ -179,8 +179,24 @@ export interface StoredSource {
 }
 
 export const DEFAULT_SOURCE = `using System;
+using System.Collections.Generic;
+using System.Linq;
 
-Console.WriteLine("Hello, codedotnet!");
+public class Program
+{
+	public static void Main()
+	{
+		// Print Star pattern in reverse
+				for (int i = 9; i > 1; --i)
+				{
+						for (int j = 1; j < i; j++)
+						{
+								Console.Write("*");
+						}
+						Console.WriteLine();
+				}
+	}
+}
 `
 
 export function loadSource(): string {
