@@ -30,6 +30,7 @@ import {
   type LayoutSettings,
   type Theme,
 } from './editor/editorSettings'
+import { detectFeatureSupport, getMissingRequiredFeatures } from './browserSupport'
 
 type BuildStatus =
   | 'Idle'
@@ -71,7 +72,15 @@ function App() {
   const [runtimeInfo, setRuntimeInfo] = useState<RuntimeInformation | null>(null)
   const [aboutOpen, setAboutOpen] = useState(false)
 
+  const [missingFeatures] = useState<string[]>(() => getMissingRequiredFeatures(detectFeatureSupport()))
+
   useEffect(() => {
+    if (missingFeatures.length > 0) {
+      // Unsupported environment (NFR-C004): skip worker boot entirely and show the
+      // compatibility fallback UI instead of an unexplained failure.
+      return
+    }
+
     const manager = new WorkerManager()
     managerRef.current = manager
     let cancelled = false
@@ -334,6 +343,69 @@ function App() {
     editorRef.current?.focus()
   }, [])
 
+  // Global keyboard shortcuts (FR-112): Ctrl/Cmd+Enter (Run), Shift+F5 (Stop),
+  // Ctrl/Cmd+S (force an immediate local save), and F11 (focus/fullscreen). Find/Replace and
+  // Undo/Redo are handled natively by Monaco while the editor has focus, so they are not
+  // duplicated here.
+  useEffect(() => {
+    function onGlobalKeyDown(event: KeyboardEvent) {
+      const isRunShortcut = (event.ctrlKey || event.metaKey) && event.key === 'Enter'
+      const isStopShortcut = event.shiftKey && event.key === 'F5'
+      const isSaveShortcut = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's'
+      const isFullscreenShortcut = event.key === 'F11'
+
+      if (isRunShortcut) {
+        event.preventDefault()
+        if (canRun) {
+          void handleRun()
+        }
+        return
+      }
+
+      if (isStopShortcut) {
+        event.preventDefault()
+        if (canStop) {
+          handleStop()
+        }
+        return
+      }
+
+      if (isSaveShortcut) {
+        event.preventDefault()
+        const sourceSaved = saveSource(editorRef.current?.getValue() ?? source)
+        const stdinSaved = saveStdin(stdin)
+        setSaveState(sourceSaved && stdinSaved ? 'saved' : 'unavailable')
+        return
+      }
+
+      if (isFullscreenShortcut) {
+        event.preventDefault()
+        toggleFullscreen()
+      }
+    }
+
+    window.addEventListener('keydown', onGlobalKeyDown)
+    return () => window.removeEventListener('keydown', onGlobalKeyDown)
+  }, [canRun, canStop, handleRun, handleStop, toggleFullscreen, source, stdin])
+
+  if (missingFeatures.length > 0) {
+    return (
+      <div className="app-shell app-shell--error">
+        <h1>codedotnet is not supported in this browser</h1>
+        <p>Your browser is missing required capabilities:</p>
+        <ul>
+          {missingFeatures.map((feature) => (
+            <li key={feature}>{feature}</li>
+          ))}
+        </ul>
+        <p>
+          Please try the current stable release of Microsoft Edge, Google Chrome, Mozilla Firefox, or Apple
+          Safari.
+        </p>
+      </div>
+    )
+  }
+
   if (initError) {
     return (
       <div className="app-shell app-shell--error">
@@ -430,10 +502,15 @@ function App() {
         <span className="app-shell__logo">codedotnet</span>
 
         <div className="app-shell__actions">
-          <button type="button" onClick={() => void handleRun()} disabled={!canRun}>
+          <button
+            type="button"
+            onClick={() => void handleRun()}
+            disabled={!canRun}
+            title="Run (Ctrl/Cmd+Enter)"
+          >
             {isBusy ? 'Running…' : 'Run'}
           </button>
-          <button type="button" onClick={handleStop} disabled={!canStop}>
+          <button type="button" onClick={handleStop} disabled={!canStop} title="Stop (Shift+F5)">
             Stop
           </button>
           <button type="button" onClick={handleClearOutput}>
@@ -454,7 +531,7 @@ function App() {
           <button type="button" onClick={() => setFocusMode((prev) => (prev === 'io' ? 'none' : 'io'))}>
             {focusMode === 'io' ? 'Exit focus' : 'Focus I/O'}
           </button>
-          <button type="button" onClick={toggleFullscreen}>
+          <button type="button" onClick={toggleFullscreen} title="Toggle fullscreen (F11)">
             {isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
           </button>
           <button type="button" onClick={restoreDefaultLayout}>
