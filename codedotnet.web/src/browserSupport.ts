@@ -14,7 +14,12 @@ export interface FeatureSupport {
 }
 
 /** Features required for codedotnet to function at all; missing any of these blocks the app. */
-const REQUIRED_FEATURES: (keyof FeatureSupport)[] = ['webAssembly', 'webWorkers', 'blobUrls', 'storage']
+const REQUIRED_FEATURES: (keyof FeatureSupport)[] = [
+  'webAssembly',
+  'webWorkers',
+  'blobUrls',
+  'storage',
+]
 
 function detectStorage(): boolean {
   try {
@@ -34,12 +39,17 @@ export function detectFeatureSupport(): FeatureSupport {
   return {
     webAssembly: typeof WebAssembly !== 'undefined',
     webWorkers: hasWindow && typeof Worker !== 'undefined',
-    blobUrls: hasWindow && typeof Blob !== 'undefined' && typeof URL?.createObjectURL === 'function',
+    blobUrls:
+      hasWindow && typeof Blob !== 'undefined' && typeof URL?.createObjectURL === 'function',
     storage: detectStorage(),
-    download: hasWindow && typeof document !== 'undefined' && 'download' in document.createElement('a'),
+    download:
+      hasWindow && typeof document !== 'undefined' && 'download' in document.createElement('a'),
     // Fullscreen API is optional (FR-088 provides an internal fallback), so it is not part of
     // REQUIRED_FEATURES, but is still reported for diagnostic/documentation purposes.
-    fullscreen: hasWindow && typeof document !== 'undefined' && Boolean(document.documentElement.requestFullscreen),
+    fullscreen:
+      hasWindow &&
+      typeof document !== 'undefined' &&
+      Boolean(document.documentElement.requestFullscreen),
   }
 }
 

@@ -130,7 +130,10 @@ export class WorkerManager {
     stdin: string,
     timeoutMs: number = DEFAULT_EXECUTION_TIMEOUT_MS,
   ): Promise<CompileAndRunResponsePayload> {
-    const requestPromise = this.send('CompileAndRun', { source, stdin }) as Promise<CompileAndRunResponsePayload>
+    const requestPromise = this.send('CompileAndRun', {
+      source,
+      stdin,
+    }) as Promise<CompileAndRunResponsePayload>
 
     const timeoutPromise = new Promise<CompileAndRunResponsePayload>((_resolve, reject) => {
       setTimeout(() => {

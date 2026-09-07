@@ -16,15 +16,19 @@ export interface ComplexityEstimate {
 
 const LOOP_KEYWORD_RE = /\b(for|foreach|while)\s*\(/g
 const SORT_CALL_RE = /\.(Sort|OrderBy|OrderByDescending|ThenBy|ThenByDescending)\s*\(/g
-const LINQ_SCAN_RE = /\.(Where|Select|SelectMany|Any|All|Count|Sum|Average|Min|Max|First|FirstOrDefault|Single|SingleOrDefault|ToList|ToArray|ToDictionary|ToHashSet|Aggregate|Reverse|Distinct|GroupBy)\s*\(/g
+const LINQ_SCAN_RE =
+  /\.(Where|Select|SelectMany|Any|All|Count|Sum|Average|Min|Max|First|FirstOrDefault|Single|SingleOrDefault|ToList|ToArray|ToDictionary|ToHashSet|Aggregate|Reverse|Distinct|GroupBy)\s*\(/g
 const CONTAINS_LOOKUP_RE = /\.(Contains|IndexOf|LastIndexOf|Find|FindIndex)\s*\(/g
 const HASH_LOOKUP_TYPE_RE = /\b(Dictionary|HashSet|ConcurrentDictionary|ConcurrentBag)\s*</
 const LIST_ARRAY_LOOKUP_TYPE_RE = /\b(List|IList|IEnumerable|Array)\s*</
-const METHOD_DECL_RE = /\b(?:public|private|protected|internal|static)(?:\s+(?:static|virtual|override|sealed|async|readonly))*\s+[\w<>[\],.?]+\s+(\w+)\s*\(([^)]*)\)\s*(?::[^{]*)?\{/g
-const HALVING_RE = /\b(?:mid|low|high|left|right|lo|hi|start|end|l|r)\s*(?:\/=\s*2|>>=\s*1|=\s*[\w.]+\s*\/\s*2\b)|\b\w+\s*=\s*\(\s*\w+\s*\+\s*\w+\s*\)\s*\/\s*2\b/
+const METHOD_DECL_RE =
+  /\b(?:public|private|protected|internal|static)(?:\s+(?:static|virtual|override|sealed|async|readonly))*\s+[\w<>[\],.?]+\s+(\w+)\s*\(([^)]*)\)\s*(?::[^{]*)?\{/g
+const HALVING_RE =
+  /\b(?:mid|low|high|left|right|lo|hi|start|end|l|r)\s*(?:\/=\s*2|>>=\s*1|=\s*[\w.]+\s*\/\s*2\b)|\b\w+\s*=\s*\(\s*\w+\s*\+\s*\w+\s*\)\s*\/\s*2\b/
 const DOUBLING_RE = /\b(?:i|j|k|n|size|count)\s*(?:\*=\s*2|<<=\s*1|=\s*\w+\s*\*\s*2\b)/
 const MEMO_TYPE_HINT_RE = /\b(?:memo|cache|dp|seen|visited)\b/i
-const COLLECTION_ALLOC_RE = /\bnew\s+(List|Dictionary|HashSet|Queue|Stack|SortedSet|SortedDictionary|ConcurrentDictionary|ConcurrentBag|StringBuilder|\w+\[\])/g
+const COLLECTION_ALLOC_RE =
+  /\bnew\s+(List|Dictionary|HashSet|Queue|Stack|SortedSet|SortedDictionary|ConcurrentDictionary|ConcurrentBag|StringBuilder|\w+\[\])/g
 const NESTED_LOOP_LOOKUP_HINT_RE = /\.(Contains|ContainsKey|ContainsValue)\s*\(/
 
 interface MethodInfo {
@@ -119,7 +123,11 @@ function extractMethods(code: string): MethodInfo[] {
   while ((match = METHOD_DECL_RE.exec(code))) {
     const name = match[1]
     const params = match[2] ?? ''
-    if (!name || ['if', 'for', 'foreach', 'while', 'switch', 'catch', 'using', 'lock'].includes(name)) continue
+    if (
+      !name ||
+      ['if', 'for', 'foreach', 'while', 'switch', 'catch', 'using', 'lock'].includes(name)
+    )
+      continue
     const openBrace = code.indexOf('{', match.index)
     if (openBrace === -1) continue
     const closeBrace = findMatchingBrace(code, openBrace)
@@ -139,14 +147,21 @@ function extractMethods(code: string): MethodInfo[] {
       loopDepth: maxLoopNestingDepth(body),
       loopCount: (body.match(LOOP_KEYWORD_RE) || []).length,
       recursiveCallCount,
-      hasMemoization: MEMO_TYPE_HINT_RE.test(body) && (HASH_LOOKUP_TYPE_RE.test(body) || /\[.+\]\s*=/.test(body)),
+      hasMemoization:
+        MEMO_TYPE_HINT_RE.test(body) && (HASH_LOOKUP_TYPE_RE.test(body) || /\[.+\]\s*=/.test(body)),
       hasHalving: HALVING_RE.test(body),
       hasDoubling: DOUBLING_RE.test(body),
       usesSort: SORT_CALL_RE.test(body),
       usesLinqScan: LINQ_SCAN_RE.test(body),
-      usesHashLookupInLoop: loopBodies.length > 0 && HASH_LOOKUP_TYPE_RE.test(loopBodyText) && NESTED_LOOP_LOOKUP_HINT_RE.test(loopBodyText),
-      usesLinearLookupInLoop: loopBodies.length > 0 && LIST_ARRAY_LOOKUP_TYPE_RE.test(loopBodyText) && CONTAINS_LOOKUP_RE.test(loopBodyText),
-      allocatesCollectionsInLoop: loopBodies.some(b => COLLECTION_ALLOC_RE.test(b)),
+      usesHashLookupInLoop:
+        loopBodies.length > 0 &&
+        HASH_LOOKUP_TYPE_RE.test(loopBodyText) &&
+        NESTED_LOOP_LOOKUP_HINT_RE.test(loopBodyText),
+      usesLinearLookupInLoop:
+        loopBodies.length > 0 &&
+        LIST_ARRAY_LOOKUP_TYPE_RE.test(loopBodyText) &&
+        CONTAINS_LOOKUP_RE.test(loopBodyText),
+      allocatesCollectionsInLoop: loopBodies.some((b) => COLLECTION_ALLOC_RE.test(b)),
       allocatesCollections: COLLECTION_ALLOC_RE.test(body),
     })
     LOOP_KEYWORD_RE.lastIndex = 0
@@ -207,13 +222,31 @@ function classifyLoops(method: MethodInfo): { rank: number; time: string; ration
   const { loopDepth, loopCount } = method
 
   if (loopDepth === 0) {
-    if (method.usesSort) return { rank: 1, time: 'O(n log n)', rationale: `'${method.name}' calls Sort/OrderBy with no explicit loops.` }
-    if (method.usesLinqScan) return { rank: 0.5, time: 'O(n)', rationale: `'${method.name}' uses LINQ (Where/Select/etc.), each a single O(n) pass.` }
-    return { rank: 0, time: 'O(1)', rationale: `'${method.name}' has no loops or recursion; runs in constant time.` }
+    if (method.usesSort)
+      return {
+        rank: 1,
+        time: 'O(n log n)',
+        rationale: `'${method.name}' calls Sort/OrderBy with no explicit loops.`,
+      }
+    if (method.usesLinqScan)
+      return {
+        rank: 0.5,
+        time: 'O(n)',
+        rationale: `'${method.name}' uses LINQ (Where/Select/etc.), each a single O(n) pass.`,
+      }
+    return {
+      rank: 0,
+      time: 'O(1)',
+      rationale: `'${method.name}' has no loops or recursion; runs in constant time.`,
+    }
   }
 
   if (loopDepth === 1 && (method.hasHalving || method.hasDoubling)) {
-    return { rank: 0.7, time: 'O(log n)', rationale: `'${method.name}' has a single loop whose counter halves/doubles each iteration.` }
+    return {
+      rank: 0.7,
+      time: 'O(log n)',
+      rationale: `'${method.name}' has a single loop whose counter halves/doubles each iteration.`,
+    }
   }
 
   if (loopDepth >= 1 && method.usesHashLookupInLoop) {
@@ -233,22 +266,37 @@ function classifyLoops(method: MethodInfo): { rank: number; time: string; ration
   }
 
   if (loopDepth >= 3) {
-    return { rank: loopDepth, time: `O(n^${loopDepth})`, rationale: `'${method.name}' has ${loopDepth} levels of nested loops.` }
+    return {
+      rank: loopDepth,
+      time: `O(n^${loopDepth})`,
+      rationale: `'${method.name}' has ${loopDepth} levels of nested loops.`,
+    }
   }
 
   if (loopDepth === 2) {
     const withSort = method.usesSort ? ' plus a Sort/OrderBy call' : ''
-    return { rank: 2, time: 'O(n^2)', rationale: `'${method.name}' has two nested loops${withSort}.` }
+    return {
+      rank: 2,
+      time: 'O(n^2)',
+      rationale: `'${method.name}' has two nested loops${withSort}.`,
+    }
   }
 
   // loopDepth === 1
   if (method.usesSort) {
-    return { rank: 1.5, time: 'O(n log n)', rationale: `'${method.name}' has a single loop alongside a Sort/OrderBy call.` }
+    return {
+      rank: 1.5,
+      time: 'O(n log n)',
+      rationale: `'${method.name}' has a single loop alongside a Sort/OrderBy call.`,
+    }
   }
   return {
     rank: 1,
     time: 'O(n)',
-    rationale: loopCount > 1 ? `'${method.name}' has ${loopCount} sequential (non-nested) loops.` : `'${method.name}' has a single loop.`,
+    rationale:
+      loopCount > 1
+        ? `'${method.name}' has ${loopCount} sequential (non-nested) loops.`
+        : `'${method.name}' has a single loop.`,
   }
 }
 
@@ -297,9 +345,13 @@ export function estimateComplexity(source: string): ComplexityEstimate {
             hasDoubling: DOUBLING_RE.test(code),
             usesSort: SORT_CALL_RE.test(code),
             usesLinqScan: LINQ_SCAN_RE.test(code),
-            usesHashLookupInLoop: HASH_LOOKUP_TYPE_RE.test(code) && NESTED_LOOP_LOOKUP_HINT_RE.test(code),
-            usesLinearLookupInLoop: LIST_ARRAY_LOOKUP_TYPE_RE.test(code) && CONTAINS_LOOKUP_RE.test(code),
-            allocatesCollectionsInLoop: extractLoopBodies(code).some(b => COLLECTION_ALLOC_RE.test(b)),
+            usesHashLookupInLoop:
+              HASH_LOOKUP_TYPE_RE.test(code) && NESTED_LOOP_LOOKUP_HINT_RE.test(code),
+            usesLinearLookupInLoop:
+              LIST_ARRAY_LOOKUP_TYPE_RE.test(code) && CONTAINS_LOOKUP_RE.test(code),
+            allocatesCollectionsInLoop: extractLoopBodies(code).some((b) =>
+              COLLECTION_ALLOC_RE.test(b),
+            ),
             allocatesCollections: COLLECTION_ALLOC_RE.test(code),
           },
         ]
@@ -311,7 +363,13 @@ export function estimateComplexity(source: string): ComplexityEstimate {
     const loopResult = classifyLoops(method)
 
     const candidates = [
-      recursionResult ? { rank: rankOf(recursionResult.time), time: recursionResult.time, rationale: recursionResult.rationale } : null,
+      recursionResult
+        ? {
+            rank: rankOf(recursionResult.time),
+            time: recursionResult.time,
+            rationale: recursionResult.rationale,
+          }
+        : null,
       { rank: loopResult.rank, time: loopResult.time, rationale: loopResult.rationale },
     ].filter((c): c is { rank: number; time: string; rationale: string } => c !== null)
 
@@ -323,7 +381,8 @@ export function estimateComplexity(source: string): ComplexityEstimate {
   }
 
   const time = best?.time ?? 'O(1)'
-  const rationale = best?.rationale ?? 'No loops or recursion detected; execution appears to run in constant time.'
+  const rationale =
+    best?.rationale ?? 'No loops or recursion detected; execution appears to run in constant time.'
 
   // Space: driven by recursion depth (call stack), memoization structures, and heap allocations
   // that scale with input, taking the worst signal found across all analyzed methods.
@@ -338,12 +397,19 @@ export function estimateComplexity(source: string): ComplexityEstimate {
       spaceRank = 1
       spaceReason = `'${method.name}' recurses, so the call stack grows with input size/depth.`
     }
-    if ((method.allocatesCollectionsInLoop || (method.allocatesCollections && method.loopDepth >= 1)) && spaceRank < 2) {
+    if (
+      (method.allocatesCollectionsInLoop ||
+        (method.allocatesCollections && method.loopDepth >= 1)) &&
+      spaceRank < 2
+    ) {
       spaceRank = 2
       spaceReason = `'${method.name}' allocates a collection whose size scales with the loop/input.`
     } else if (method.allocatesCollections && spaceRank < 1) {
       spaceRank = Math.max(spaceRank, 1)
-      spaceReason = spaceRank === 1 ? `'${method.name}' allocates a collection sized by the input.` : spaceReason
+      spaceReason =
+        spaceRank === 1
+          ? `'${method.name}' allocates a collection sized by the input.`
+          : spaceReason
     }
   }
 

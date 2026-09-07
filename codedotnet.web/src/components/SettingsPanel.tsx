@@ -10,7 +10,14 @@ export interface SettingsPanelProps {
 }
 
 /** Modal-style settings dialog for editor and appearance preferences (FR §16). */
-export function SettingsPanel({ open, settings, theme, onChange, onThemeChange, onClose }: SettingsPanelProps) {
+export function SettingsPanel({
+  open,
+  settings,
+  theme,
+  onChange,
+  onThemeChange,
+  onClose,
+}: SettingsPanelProps) {
   if (!open) {
     return null
   }
@@ -104,7 +111,9 @@ export function SettingsPanel({ open, settings, theme, onChange, onThemeChange, 
             <select
               id="settings-render-whitespace"
               value={settings.renderWhitespace}
-              onChange={(e) => update('renderWhitespace', e.target.value as EditorSettings['renderWhitespace'])}
+              onChange={(e) =>
+                update('renderWhitespace', e.target.value as EditorSettings['renderWhitespace'])
+              }
             >
               <option value="none">None</option>
               <option value="boundary">Boundary</option>
@@ -137,7 +146,9 @@ export function SettingsPanel({ open, settings, theme, onChange, onThemeChange, 
             <select
               id="settings-cursor-style"
               value={settings.cursorStyle}
-              onChange={(e) => update('cursorStyle', e.target.value as EditorSettings['cursorStyle'])}
+              onChange={(e) =>
+                update('cursorStyle', e.target.value as EditorSettings['cursorStyle'])
+              }
             >
               <option value="line">Line</option>
               <option value="block">Block</option>

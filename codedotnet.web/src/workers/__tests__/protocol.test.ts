@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { PROTOCOL_VERSION, type WorkerRequestEnvelope, type WorkerResponseEnvelope, type CompileAndRunRequestPayload, type CompileAndRunResponsePayload, type RuntimeInformation } from '../protocol'
+import {
+  PROTOCOL_VERSION,
+  type WorkerRequestEnvelope,
+  type WorkerResponseEnvelope,
+  type CompileAndRunRequestPayload,
+  type CompileAndRunResponsePayload,
+  type RuntimeInformation,
+} from '../protocol'
 
 describe('worker protocol shapes', () => {
   it('builds a well-formed CompileAndRun request envelope', () => {

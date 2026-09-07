@@ -14,7 +14,9 @@ export function severityToMonaco(severity: DiagnosticPayload['severity']): monac
 }
 
 /** Converts a list of compiler diagnostics into Monaco marker data for the editor. */
-export function diagnosticsToMarkers(diagnostics: DiagnosticPayload[]): monaco.editor.IMarkerData[] {
+export function diagnosticsToMarkers(
+  diagnostics: DiagnosticPayload[],
+): monaco.editor.IMarkerData[] {
   return diagnostics.map((d) => ({
     severity: severityToMonaco(d.severity),
     message: `${d.id}: ${d.message}`,

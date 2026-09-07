@@ -17,7 +17,8 @@ function AboutDialog({ open, runtimeInfo, onClose }: AboutDialogProps) {
     return null
   }
 
-  const hostingOrigin = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : 'unknown'
+  const hostingOrigin =
+    typeof window !== 'undefined' ? window.location.origin + window.location.pathname : 'unknown'
 
   return (
     <div className="settings-overlay" role="dialog" aria-modal="true" aria-label="About codedotnet">
@@ -47,7 +48,11 @@ function AboutDialog({ open, runtimeInfo, onClose }: AboutDialogProps) {
             <dd>Browser Web Worker (.NET WebAssembly)</dd>
 
             <dt>.NET runtime</dt>
-            <dd>{runtimeInfo ? `${runtimeInfo.frameworkDescription} (${runtimeInfo.environmentVersion})` : 'Unavailable'}</dd>
+            <dd>
+              {runtimeInfo
+                ? `${runtimeInfo.frameworkDescription} (${runtimeInfo.environmentVersion})`
+                : 'Unavailable'}
+            </dd>
 
             <dt>Roslyn version</dt>
             <dd>{runtimeInfo?.roslynVersion ?? 'Unavailable'}</dd>

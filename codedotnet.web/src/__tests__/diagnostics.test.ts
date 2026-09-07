@@ -29,7 +29,16 @@ describe('severityToMonaco', () => {
 
 describe('diagnosticsToMarkers', () => {
   it('maps diagnostic fields onto Monaco marker fields', () => {
-    const diagnostics = [makeDiagnostic({ id: 'CS0123', message: 'oops', startLine: 3, startColumn: 4, endLine: 3, endColumn: 10 })]
+    const diagnostics = [
+      makeDiagnostic({
+        id: 'CS0123',
+        message: 'oops',
+        startLine: 3,
+        startColumn: 4,
+        endLine: 3,
+        endColumn: 10,
+      }),
+    ]
     const markers = diagnosticsToMarkers(diagnostics)
 
     expect(markers).toHaveLength(1)

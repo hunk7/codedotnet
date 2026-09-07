@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { detectFeatureSupport, getMissingRequiredFeatures, isBrowserSupported } from '../browserSupport'
+import {
+  detectFeatureSupport,
+  getMissingRequiredFeatures,
+  isBrowserSupported,
+} from '../browserSupport'
 
 describe('browserSupport', () => {
   it('reports all required features supported in the jsdom test environment', () => {

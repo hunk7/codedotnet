@@ -22,10 +22,7 @@ export default defineConfig({
     __APP_COMMIT__: JSON.stringify(process.env.VITE_COMMIT_SHA ?? safeGitShortHash()),
     __APP_BUILD_DATE__: JSON.stringify(new Date().toISOString()),
   },
-  plugins: [
-    react(),
-    babel({ presets: [reactCompilerPreset()] })
-  ],
+  plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
   test: {
     environment: 'jsdom',
     globals: true,

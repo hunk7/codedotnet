@@ -1,9 +1,19 @@
-import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 // Trimmed import matching MonacoEditor.tsx to avoid pulling the full monaco-editor bundle
 // (see that file's comment for why deep relative node_modules paths are used here).
 import './App.css'
 import { WorkerManager, type WorkerManagerState } from './workers/workerManager'
-import type { CompileAndRunResponsePayload, DiagnosticPayload, RuntimeInformation } from './workers/protocol'
+import type {
+  CompileAndRunResponsePayload,
+  DiagnosticPayload,
+  RuntimeInformation,
+} from './workers/protocol'
 import MonacoEditor, { type MonacoEditorHandle } from './components/MonacoEditor'
 import SettingsPanel from './components/SettingsPanel'
 import AboutDialog from './components/AboutDialog'
@@ -97,13 +107,23 @@ function App() {
   const [diagnostics, setDiagnostics] = useState<DiagnosticPayload[]>([])
   const [output, setOutput] = useState('')
   const [outputTruncated, setOutputTruncated] = useState(false)
-  const [exception, setException] = useState<{ type: string; message: string; stack: string | null } | null>(null)
-  const [timings, setTimings] = useState<{ compile: number; execute: number; total: number } | null>(null)
+  const [exception, setException] = useState<{
+    type: string
+    message: string
+    stack: string | null
+  } | null>(null)
+  const [timings, setTimings] = useState<{
+    compile: number
+    execute: number
+    total: number
+  } | null>(null)
   const [complexity, setComplexity] = useState<ComplexityEstimate | null>(null)
   const [runtimeInfo, setRuntimeInfo] = useState<RuntimeInformation | null>(null)
   const [aboutOpen, setAboutOpen] = useState(false)
 
-  const [missingFeatures] = useState<string[]>(() => getMissingRequiredFeatures(detectFeatureSupport()))
+  const [missingFeatures] = useState<string[]>(() =>
+    getMissingRequiredFeatures(detectFeatureSupport()),
+  )
 
   useEffect(() => {
     if (missingFeatures.length > 0) {
@@ -435,8 +455,8 @@ function App() {
           ))}
         </ul>
         <p>
-          Please try the current stable release of Microsoft Edge, Google Chrome, Mozilla Firefox, or Apple
-          Safari.
+          Please try the current stable release of Microsoft Edge, Google Chrome, Mozilla Firefox,
+          or Apple Safari.
         </p>
       </div>
     )
@@ -480,63 +500,68 @@ function App() {
   const ioPane = (
     <ErrorBoundary label="I/O pane">
       <section className="pane pane--io">
-      <div className="io-pane__output">
-        <div className="io-pane__output-header">
-          <span>Output</span>
-          {timings && (
-            <span className="io-pane__timings">
-              build {timings.compile.toFixed(0)}ms · run {timings.execute.toFixed(0)}ms · total{' '}
-              {timings.total.toFixed(0)}ms
-            </span>
+        <div className="io-pane__output">
+          <div className="io-pane__output-header">
+            <span>Output</span>
+            {timings && (
+              <span className="io-pane__timings">
+                build {timings.compile.toFixed(0)}ms · run {timings.execute.toFixed(0)}ms · total{' '}
+                {timings.total.toFixed(0)}ms
+              </span>
+            )}
+          </div>
+          <pre className="io-pane__output-content">{output || '\u00A0'}</pre>
+          {outputTruncated && (
+            <p className="io-pane__truncation-notice">
+              Output truncated because the maximum output limit was reached.
+            </p>
+          )}
+          {exception && (
+            <div className="io-pane__exception">
+              <strong>
+                {exception.type}: {exception.message}
+              </strong>
+              {exception.stack && <pre>{exception.stack}</pre>}
+            </div>
           )}
         </div>
-        <pre className="io-pane__output-content">{output || '\u00A0'}</pre>
-        {outputTruncated && (
-          <p className="io-pane__truncation-notice">Output truncated because the maximum output limit was reached.</p>
-        )}
-        {exception && (
-          <div className="io-pane__exception">
-            <strong>
-              {exception.type}: {exception.message}
-            </strong>
-            {exception.stack && <pre>{exception.stack}</pre>}
-          </div>
-        )}
-      </div>
 
-      <div className="io-pane__problems">
-        <div className="io-pane__problems-header">Problems ({diagnostics.length})</div>
-        <ul>
-          {diagnostics.map((d, i) => (
-            <li
-              key={`${d.id}-${i}`}
-              className={`problem problem--${d.severity.toLowerCase()}`}
-              onClick={() => handleDiagnosticSelect(d)}
-            >
-              Program.cs({d.startLine},{d.startColumn}): {d.severity.toLowerCase()} {d.id}: {d.message}
-            </li>
-          ))}
-        </ul>
-      </div>
+        <div className="io-pane__problems">
+          <div className="io-pane__problems-header">Problems ({diagnostics.length})</div>
+          <ul>
+            {diagnostics.map((d, i) => (
+              <li
+                key={`${d.id}-${i}`}
+                className={`problem problem--${d.severity.toLowerCase()}`}
+                onClick={() => handleDiagnosticSelect(d)}
+              >
+                Program.cs({d.startLine},{d.startColumn}): {d.severity.toLowerCase()} {d.id}:{' '}
+                {d.message}
+              </li>
+            ))}
+          </ul>
+        </div>
 
-      <div className="io-pane__complexity">
-        <div className="io-pane__complexity-header">Complexity (estimated)</div>
-        {complexity ? (
-          <div className="io-pane__complexity-body">
-            <div className="io-pane__complexity-metric">
-              <span className="io-pane__complexity-label">Time</span>
-              <span className="io-pane__complexity-value">{complexity.time}</span>
+        <div className="io-pane__complexity">
+          <div className="io-pane__complexity-header">Complexity (estimated)</div>
+          {complexity ? (
+            <div className="io-pane__complexity-body">
+              <div className="io-pane__complexity-metric">
+                <span className="io-pane__complexity-label">Time</span>
+                <span className="io-pane__complexity-value">{complexity.time}</span>
+              </div>
+              <div className="io-pane__complexity-metric">
+                <span className="io-pane__complexity-label">Space</span>
+                <span className="io-pane__complexity-value">{complexity.space}</span>
+              </div>
+              <p className="io-pane__complexity-rationale">{complexity.rationale}</p>
             </div>
-            <div className="io-pane__complexity-metric">
-              <span className="io-pane__complexity-label">Space</span>
-              <span className="io-pane__complexity-value">{complexity.space}</span>
-            </div>
-            <p className="io-pane__complexity-rationale">{complexity.rationale}</p>
-          </div>
-        ) : (
-          <p className="io-pane__complexity-empty">Run the program to see a heuristic time/space complexity estimate.</p>
-        )}
-      </div>
+          ) : (
+            <p className="io-pane__complexity-empty">
+              Run the program to see a heuristic time/space complexity estimate.
+            </p>
+          )}
+        </div>
       </section>
     </ErrorBoundary>
   )
@@ -557,7 +582,11 @@ function App() {
             disabled={!canRun}
             title="Run (Ctrl/Cmd+Enter)"
           >
-            {isBusy ? <span className="toolbar-button__spinner" aria-hidden="true" /> : <PlayIcon />}
+            {isBusy ? (
+              <span className="toolbar-button__spinner" aria-hidden="true" />
+            ) : (
+              <PlayIcon />
+            )}
             <span>{isBusy ? 'Running…' : 'Run'}</span>
           </button>
           <button
@@ -570,15 +599,27 @@ function App() {
             <StopIcon />
             <span>Stop</span>
           </button>
-          <button type="button" className="toolbar-button toolbar-button--extra" onClick={handleClearOutput}>
+          <button
+            type="button"
+            className="toolbar-button toolbar-button--extra"
+            onClick={handleClearOutput}
+          >
             <ClearIcon />
             <span>Clear</span>
           </button>
-          <button type="button" className="toolbar-button toolbar-button--extra" onClick={handleResetProgram}>
+          <button
+            type="button"
+            className="toolbar-button toolbar-button--extra"
+            onClick={handleResetProgram}
+          >
             <ResetIcon />
             <span>Reset</span>
           </button>
-          <button type="button" className="toolbar-button toolbar-button--extra" onClick={togglePaneOrder}>
+          <button
+            type="button"
+            className="toolbar-button toolbar-button--extra"
+            onClick={togglePaneOrder}
+          >
             <SwapIcon />
             <span>Swap panes</span>
           </button>
@@ -607,11 +648,19 @@ function App() {
             <FullscreenIcon />
             <span>{isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}</span>
           </button>
-          <button type="button" className="toolbar-button toolbar-button--extra" onClick={restoreDefaultLayout}>
+          <button
+            type="button"
+            className="toolbar-button toolbar-button--extra"
+            onClick={restoreDefaultLayout}
+          >
             <RestoreLayoutIcon />
             <span>Restore layout</span>
           </button>
-          <button type="button" className="toolbar-button toolbar-button--extra" onClick={handleDownload}>
+          <button
+            type="button"
+            className="toolbar-button toolbar-button--extra"
+            onClick={handleDownload}
+          >
             <DownloadIcon />
             <span>Download</span>
           </button>
@@ -623,11 +672,19 @@ function App() {
           >
             <ThemeToggleIcon theme={theme} />
           </button>
-          <button type="button" className="toolbar-button toolbar-button--extra" onClick={() => setSettingsOpen(true)}>
+          <button
+            type="button"
+            className="toolbar-button toolbar-button--extra"
+            onClick={() => setSettingsOpen(true)}
+          >
             <SettingsIcon />
             <span>Settings</span>
           </button>
-          <button type="button" className="toolbar-button toolbar-button--extra" onClick={() => setAboutOpen(true)}>
+          <button
+            type="button"
+            className="toolbar-button toolbar-button--extra"
+            onClick={() => setAboutOpen(true)}
+          >
             <InfoIcon />
             <span>About</span>
           </button>
@@ -651,7 +708,11 @@ function App() {
           </div>
         ) : layoutSettings.paneOrder === 'editor-left' ? (
           <>
-            <div key="editor-wrapper" className="pane-wrapper" style={{ flexBasis: `${layoutSettings.splitRatio * 100}%` }}>
+            <div
+              key="editor-wrapper"
+              className="pane-wrapper"
+              style={{ flexBasis: `${layoutSettings.splitRatio * 100}%` }}
+            >
               {editorPane}
             </div>
             <div
@@ -660,13 +721,21 @@ function App() {
               role="separator"
               aria-orientation="vertical"
             />
-            <div key="io-wrapper" className="pane-wrapper" style={{ flexBasis: `${(1 - layoutSettings.splitRatio) * 100}%` }}>
+            <div
+              key="io-wrapper"
+              className="pane-wrapper"
+              style={{ flexBasis: `${(1 - layoutSettings.splitRatio) * 100}%` }}
+            >
               {ioPane}
             </div>
           </>
         ) : (
           <>
-            <div key="io-wrapper" className="pane-wrapper" style={{ flexBasis: `${layoutSettings.splitRatio * 100}%` }}>
+            <div
+              key="io-wrapper"
+              className="pane-wrapper"
+              style={{ flexBasis: `${layoutSettings.splitRatio * 100}%` }}
+            >
               {ioPane}
             </div>
             <div
@@ -675,7 +744,11 @@ function App() {
               role="separator"
               aria-orientation="vertical"
             />
-            <div key="editor-wrapper" className="pane-wrapper" style={{ flexBasis: `${(1 - layoutSettings.splitRatio) * 100}%` }}>
+            <div
+              key="editor-wrapper"
+              className="pane-wrapper"
+              style={{ flexBasis: `${(1 - layoutSettings.splitRatio) * 100}%` }}
+            >
               {editorPane}
             </div>
           </>
@@ -686,7 +759,11 @@ function App() {
         <span>{buildStatus}</span>
         <span>{workerState}</span>
         <span className={`save-state save-state--${saveState}`}>
-          {saveState === 'saved' ? 'Saved' : saveState === 'pending' ? 'Saving…' : 'Storage unavailable'}
+          {saveState === 'saved'
+            ? 'Saved'
+            : saveState === 'pending'
+              ? 'Saving…'
+              : 'Storage unavailable'}
         </span>
         <button type="button" className="clear-data-button" onClick={handleClearLocalData}>
           Clear local data

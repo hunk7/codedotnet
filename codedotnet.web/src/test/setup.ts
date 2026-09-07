@@ -35,4 +35,3 @@ if (typeof window !== 'undefined' && typeof window.Worker === 'undefined') {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   window.Worker = StubWorker as any
 }
-

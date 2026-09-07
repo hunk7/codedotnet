@@ -111,13 +111,21 @@ export function loadEditorSettings(): EditorSettings {
 
   return {
     ...merged,
-    fontSize: clamp(Number(merged.fontSize) || DEFAULT_EDITOR_SETTINGS.fontSize, FONT_SIZE_RANGE.min, FONT_SIZE_RANGE.max),
+    fontSize: clamp(
+      Number(merged.fontSize) || DEFAULT_EDITOR_SETTINGS.fontSize,
+      FONT_SIZE_RANGE.min,
+      FONT_SIZE_RANGE.max,
+    ),
     lineHeight: clamp(
       Number(merged.lineHeight) || DEFAULT_EDITOR_SETTINGS.lineHeight,
       LINE_HEIGHT_RANGE.min,
       LINE_HEIGHT_RANGE.max,
     ),
-    tabSize: clamp(Number(merged.tabSize) || DEFAULT_EDITOR_SETTINGS.tabSize, TAB_SIZE_RANGE.min, TAB_SIZE_RANGE.max),
+    tabSize: clamp(
+      Number(merged.tabSize) || DEFAULT_EDITOR_SETTINGS.tabSize,
+      TAB_SIZE_RANGE.min,
+      TAB_SIZE_RANGE.max,
+    ),
     wordWrap: merged.wordWrap === 'on' ? 'on' : 'off',
     renderWhitespace: (['none', 'boundary', 'all'] as const).includes(merged.renderWhitespace)
       ? merged.renderWhitespace
@@ -165,7 +173,10 @@ export function resolveTheme(theme: Theme): 'vs-dark' | 'vs-light' {
   if (theme !== 'system') {
     return theme
   }
-  if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: light)').matches) {
+  if (
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-color-scheme: light)').matches
+  ) {
     return 'vs-light'
   }
   return 'vs-dark'
