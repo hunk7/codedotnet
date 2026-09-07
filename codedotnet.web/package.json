@@ -13,8 +13,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build:worker": "powershell -File ../scripts/copy-worker-assets.ps1 -Configuration Debug",
-    "build:worker:release": "powershell -File ../scripts/copy-worker-assets.ps1 -Configuration Release"
+    "build:worker": "node ../scripts/run-worker-script.cjs --debug",
+    "build:worker:release": "node ../scripts/run-worker-script.cjs --release"
   },
   "dependencies": {
     "monaco-editor": "^0.56.0",

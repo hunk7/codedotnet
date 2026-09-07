@@ -1,0 +1,20 @@
+# Normalize line endings to LF in the repository regardless of the checkout platform,
+# so tools like Prettier (which expects LF) don't flag Windows-checked-out files as
+# unformatted. Git will still check out files using the OS-appropriate line ending
+# locally when core.autocrlf is enabled, but the repository blobs stay LF-normalized.
+* text=auto eol=lf
+
+# Windows-only script files should keep CRLF for compatibility with legacy tooling.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary assets should never be subject to line-ending conversion.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.wasm binary
