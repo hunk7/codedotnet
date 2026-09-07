@@ -212,7 +212,7 @@ jobs:
           "### Build artifact size`n`nTotal: **$totalMb MB** across $($items.Count) files" >> $env:GITHUB_STEP_SUMMARY
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
