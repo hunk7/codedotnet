@@ -169,3 +169,12 @@ export function SystemIcon(props: IconProps) {
     </BaseIcon>
   )
 }
+
+export function LogoIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <polyline points="9 6 3 12 9 18" />
+      <polyline points="15 6 21 12 15 18" />
+    </BaseIcon>
+  )
+}

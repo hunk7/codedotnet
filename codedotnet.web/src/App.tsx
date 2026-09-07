@@ -9,6 +9,7 @@ import SettingsPanel from './components/SettingsPanel'
 import AboutDialog from './components/AboutDialog'
 import ErrorBoundary from './components/ErrorBoundary'
 import { diagnosticsToMarkers } from './diagnostics'
+import { estimateComplexity, type ComplexityEstimate } from './complexity'
 import {
   clearAllLocalData,
   DEFAULT_EDITOR_SETTINGS,
@@ -18,13 +19,11 @@ import {
   loadEditorSettings,
   loadLayoutSettings,
   loadSource,
-  loadStdin,
   loadTheme,
   resolveTheme,
   saveEditorSettings,
   saveLayoutSettings,
   saveSource,
-  saveStdin,
   saveTheme,
   type EditorSettings,
   type LayoutSettings,
@@ -37,6 +36,7 @@ import {
   FocusIcon,
   FullscreenIcon,
   InfoIcon,
+  LogoIcon,
   MoonIcon,
   PlayIcon,
   ResetIcon,
@@ -88,9 +88,10 @@ function App() {
   const [focusMode, setFocusMode] = useState<'none' | 'editor' | 'io'>('none')
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [saveState, setSaveState] = useState<'saved' | 'pending' | 'unavailable'>('saved')
+  const [hasBootstrapped, setHasBootstrapped] = useState(false)
 
   const [source, setSource] = useState(() => loadSource())
-  const [stdin, setStdin] = useState(() => loadStdin())
+  const stdin = ''
 
   const [buildStatus, setBuildStatus] = useState<BuildStatus>('Idle')
   const [diagnostics, setDiagnostics] = useState<DiagnosticPayload[]>([])
@@ -98,6 +99,7 @@ function App() {
   const [outputTruncated, setOutputTruncated] = useState(false)
   const [exception, setException] = useState<{ type: string; message: string; stack: string | null } | null>(null)
   const [timings, setTimings] = useState<{ compile: number; execute: number; total: number } | null>(null)
+  const [complexity, setComplexity] = useState<ComplexityEstimate | null>(null)
   const [runtimeInfo, setRuntimeInfo] = useState<RuntimeInformation | null>(null)
   const [aboutOpen, setAboutOpen] = useState(false)
 
@@ -124,6 +126,7 @@ function App() {
         await manager.initialize()
         if (cancelled) return
         setInitStatus('Ready')
+        setHasBootstrapped(true)
         try {
           const info = await manager.getRuntimeInformation()
           if (!cancelled) setRuntimeInfo(info)
@@ -223,29 +226,22 @@ function App() {
     setSaveState('pending')
   }, [])
 
-  const persistStdin = useCallback((value: string) => {
-    setStdin(value)
-    setSaveState('pending')
-  }, [])
-
-  // Debounced autosave for source/stdin (§16.3): avoids writing to localStorage on every
+  // Debounced autosave for source (§16.3): avoids writing to localStorage on every
   // keystroke while still surfacing a save-state indicator to the user.
   useEffect(() => {
     if (saveState !== 'pending') return
 
     const handle = window.setTimeout(() => {
       const sourceSaved = saveSource(source)
-      const stdinSaved = saveStdin(stdin)
-      setSaveState(sourceSaved && stdinSaved ? 'saved' : 'unavailable')
+      setSaveState(sourceSaved ? 'saved' : 'unavailable')
     }, 500)
 
     return () => window.clearTimeout(handle)
-  }, [source, stdin, saveState])
+  }, [source, saveState])
 
   const handleClearLocalData = useCallback(() => {
     clearAllLocalData()
     setSource(DEFAULT_SOURCE)
-    setStdin('')
     setEditorSettings({ ...DEFAULT_EDITOR_SETTINGS })
     setLayoutSettings({ ...DEFAULT_LAYOUT_SETTINGS })
     setTheme(DEFAULT_THEME)
@@ -267,6 +263,7 @@ function App() {
     setOutputTruncated(false)
     setException(null)
     setTimings(null)
+    setComplexity(null)
 
     try {
       const result: CompileAndRunResponsePayload = await manager.compileAndRun(snapshot, stdin)
@@ -279,6 +276,7 @@ function App() {
         execute: result.executionDurationMs,
         total: result.totalDurationMs,
       })
+      setComplexity(estimateComplexity(snapshot))
 
       if (result.exceptionType) {
         setException({
@@ -314,15 +312,15 @@ function App() {
     setOutputTruncated(false)
     setException(null)
     setTimings(null)
+    setComplexity(null)
     setBuildStatus('Idle')
   }, [])
 
   const handleResetProgram = useCallback(() => {
     editorRef.current?.setValue(DEFAULT_SOURCE)
     persistSource(DEFAULT_SOURCE)
-    persistStdin('')
     handleClearOutput()
-  }, [persistSource, persistStdin, handleClearOutput])
+  }, [persistSource, handleClearOutput])
 
   const handleDownload = useCallback(() => {
     const value = editorRef.current?.getValue() ?? source
@@ -347,15 +345,25 @@ function App() {
     const workspace = workspaceRef.current
     if (!workspace) return
 
+    // Orientation-aware so the divider drags correctly whether the workspace is laid out
+    // as a row (desktop/tablet, side-by-side panes) or a column (narrow/mobile, stacked
+    // panes) - dragging along the wrong axis previously left the split unresponsive on
+    // small screens.
+    const isColumn = window.getComputedStyle(workspace).flexDirection === 'column'
+
     const onPointerMove = (moveEvent: PointerEvent) => {
       const rect = workspace.getBoundingClientRect()
-      const rawRatio = (moveEvent.clientX - rect.left) / rect.width
+      const rawRatio = isColumn
+        ? (moveEvent.clientY - rect.top) / rect.height
+        : (moveEvent.clientX - rect.left) / rect.width
       const clampedRatio = Math.min(0.8, Math.max(0.2, rawRatio))
 
-      setLayoutSettings((prev) => {
-        const ratio = prev.paneOrder === 'editor-left' ? clampedRatio : 1 - clampedRatio
-        return { ...prev, splitRatio: ratio }
-      })
+      // splitRatio always represents the LEFT-hand pane's share of the workspace,
+      // regardless of whether the editor or the I/O pane currently occupies that slot
+      // (see the render logic below, which assigns `splitRatio` to whichever pane is
+      // first). Inverting it based on paneOrder here previously made dragging behave
+      // backwards whenever panes were swapped.
+      setLayoutSettings((prev) => ({ ...prev, splitRatio: clampedRatio }))
     }
 
     const onPointerUp = () => {
@@ -402,8 +410,7 @@ function App() {
       if (isSaveShortcut) {
         event.preventDefault()
         const sourceSaved = saveSource(editorRef.current?.getValue() ?? source)
-        const stdinSaved = saveStdin(stdin)
-        setSaveState(sourceSaved && stdinSaved ? 'saved' : 'unavailable')
+        setSaveState(sourceSaved ? 'saved' : 'unavailable')
         return
       }
 
@@ -415,7 +422,7 @@ function App() {
 
     window.addEventListener('keydown', onGlobalKeyDown)
     return () => window.removeEventListener('keydown', onGlobalKeyDown)
-  }, [canRun, canStop, handleRun, handleStop, toggleFullscreen, source, stdin])
+  }, [canRun, canStop, handleRun, handleStop, toggleFullscreen, source])
 
   if (missingFeatures.length > 0) {
     return (
@@ -446,7 +453,7 @@ function App() {
     )
   }
 
-  if (workerState !== 'Ready' && workerState !== 'Busy') {
+  if (!hasBootstrapped) {
     return (
       <div className="app-shell app-shell--loading">
         <p>{initStatus}</p>
@@ -473,16 +480,6 @@ function App() {
   const ioPane = (
     <ErrorBoundary label="I/O pane">
       <section className="pane pane--io">
-      <div className="io-pane__stdin">
-        <label htmlFor="stdin-input">STDIN</label>
-        <textarea
-          id="stdin-input"
-          value={stdin}
-          onChange={(e) => persistStdin(e.target.value)}
-          placeholder="Optional input provided to the program before it runs"
-        />
-      </div>
-
       <div className="io-pane__output">
         <div className="io-pane__output-header">
           <span>Output</span>
@@ -521,6 +518,25 @@ function App() {
           ))}
         </ul>
       </div>
+
+      <div className="io-pane__complexity">
+        <div className="io-pane__complexity-header">Complexity (estimated)</div>
+        {complexity ? (
+          <div className="io-pane__complexity-body">
+            <div className="io-pane__complexity-metric">
+              <span className="io-pane__complexity-label">Time</span>
+              <span className="io-pane__complexity-value">{complexity.time}</span>
+            </div>
+            <div className="io-pane__complexity-metric">
+              <span className="io-pane__complexity-label">Space</span>
+              <span className="io-pane__complexity-value">{complexity.space}</span>
+            </div>
+            <p className="io-pane__complexity-rationale">{complexity.rationale}</p>
+          </div>
+        ) : (
+          <p className="io-pane__complexity-empty">Run the program to see a heuristic time/space complexity estimate.</p>
+        )}
+      </div>
       </section>
     </ErrorBoundary>
   )
@@ -528,7 +544,10 @@ function App() {
   return (
     <div className={`app-shell${isFullscreen ? ' app-shell--fullscreen' : ''}`}>
       <header className="app-shell__toolbar">
-        <span className="app-shell__logo">codedotnet</span>
+        <span className="app-shell__logo">
+          <LogoIcon className="app-shell__logo-icon" />
+          codedotnet
+        </span>
 
         <div className="app-shell__actions">
           <button
@@ -551,21 +570,21 @@ function App() {
             <StopIcon />
             <span>Stop</span>
           </button>
-          <button type="button" className="toolbar-button" onClick={handleClearOutput}>
+          <button type="button" className="toolbar-button toolbar-button--extra" onClick={handleClearOutput}>
             <ClearIcon />
             <span>Clear</span>
           </button>
-          <button type="button" className="toolbar-button" onClick={handleResetProgram}>
+          <button type="button" className="toolbar-button toolbar-button--extra" onClick={handleResetProgram}>
             <ResetIcon />
             <span>Reset</span>
           </button>
-          <button type="button" className="toolbar-button" onClick={togglePaneOrder}>
+          <button type="button" className="toolbar-button toolbar-button--extra" onClick={togglePaneOrder}>
             <SwapIcon />
             <span>Swap panes</span>
           </button>
           <button
             type="button"
-            className="toolbar-button"
+            className="toolbar-button toolbar-button--extra"
             onClick={() => setFocusMode((prev) => (prev === 'editor' ? 'none' : 'editor'))}
           >
             <FocusIcon />
@@ -573,7 +592,7 @@ function App() {
           </button>
           <button
             type="button"
-            className="toolbar-button"
+            className="toolbar-button toolbar-button--extra"
             onClick={() => setFocusMode((prev) => (prev === 'io' ? 'none' : 'io'))}
           >
             <FocusIcon />
@@ -581,34 +600,34 @@ function App() {
           </button>
           <button
             type="button"
-            className="toolbar-button"
+            className="toolbar-button toolbar-button--extra"
             onClick={toggleFullscreen}
             title="Toggle fullscreen (F11)"
           >
             <FullscreenIcon />
             <span>{isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}</span>
           </button>
-          <button type="button" className="toolbar-button" onClick={restoreDefaultLayout}>
+          <button type="button" className="toolbar-button toolbar-button--extra" onClick={restoreDefaultLayout}>
             <RestoreLayoutIcon />
             <span>Restore layout</span>
           </button>
-          <button type="button" className="toolbar-button" onClick={handleDownload}>
+          <button type="button" className="toolbar-button toolbar-button--extra" onClick={handleDownload}>
             <DownloadIcon />
             <span>Download</span>
           </button>
           <button
             type="button"
-            className="toolbar-button toolbar-button--icon-only"
+            className="toolbar-button toolbar-button--icon-only toolbar-button--extra"
             onClick={() => setTheme(cycleTheme(theme))}
             title={`Theme: ${theme} (click to cycle)`}
           >
             <ThemeToggleIcon theme={theme} />
           </button>
-          <button type="button" className="toolbar-button" onClick={() => setSettingsOpen(true)}>
+          <button type="button" className="toolbar-button toolbar-button--extra" onClick={() => setSettingsOpen(true)}>
             <SettingsIcon />
             <span>Settings</span>
           </button>
-          <button type="button" className="toolbar-button" onClick={() => setAboutOpen(true)}>
+          <button type="button" className="toolbar-button toolbar-button--extra" onClick={() => setAboutOpen(true)}>
             <InfoIcon />
             <span>About</span>
           </button>
@@ -632,7 +651,7 @@ function App() {
           </div>
         ) : layoutSettings.paneOrder === 'editor-left' ? (
           <>
-            <div className="pane-wrapper" style={{ flexBasis: `${layoutSettings.splitRatio * 100}%` }}>
+            <div key="editor-wrapper" className="pane-wrapper" style={{ flexBasis: `${layoutSettings.splitRatio * 100}%` }}>
               {editorPane}
             </div>
             <div
@@ -641,13 +660,13 @@ function App() {
               role="separator"
               aria-orientation="vertical"
             />
-            <div className="pane-wrapper" style={{ flexBasis: `${(1 - layoutSettings.splitRatio) * 100}%` }}>
+            <div key="io-wrapper" className="pane-wrapper" style={{ flexBasis: `${(1 - layoutSettings.splitRatio) * 100}%` }}>
               {ioPane}
             </div>
           </>
         ) : (
           <>
-            <div className="pane-wrapper" style={{ flexBasis: `${layoutSettings.splitRatio * 100}%` }}>
+            <div key="io-wrapper" className="pane-wrapper" style={{ flexBasis: `${layoutSettings.splitRatio * 100}%` }}>
               {ioPane}
             </div>
             <div
@@ -656,7 +675,7 @@ function App() {
               role="separator"
               aria-orientation="vertical"
             />
-            <div className="pane-wrapper" style={{ flexBasis: `${(1 - layoutSettings.splitRatio) * 100}%` }}>
+            <div key="editor-wrapper" className="pane-wrapper" style={{ flexBasis: `${(1 - layoutSettings.splitRatio) * 100}%` }}>
               {editorPane}
             </div>
           </>
