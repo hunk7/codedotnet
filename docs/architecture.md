@@ -43,6 +43,10 @@ Browser Main Thread
 - Native pointer-event-based resizable split panes (`App.tsx` divider handlers) rather than a
   third-party resizable-panels library
 - Plain CSS (`App.css`) with a `data-theme` attribute for light/dark theming
+- Static Big-O complexity estimator (`codedotnet.web/src/complexity.ts`) that analyzes the C#
+  source per method (loop nesting via matched-paren/brace interval tracking, recursion shape,
+  memoization, divide-and-conquer/halving, LINQ, hash vs. linear lookups) and renders a time/space
+  estimate with rationale in the output pane after each run
 
 ### Runtime and compiler
 

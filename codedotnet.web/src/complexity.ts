@@ -71,30 +71,62 @@ function findMatchingBrace(code: string, openBraceIndex: number): number {
   return -1
 }
 
-/** Finds the maximum nesting depth of for/foreach/while loops via a brace-depth walk, scoped to `code`. */
-function maxLoopNestingDepth(code: string): number {
+/** Finds the end index of the parenthesized group that starts at `openParenIndex`. */
+function findMatchingParen(code: string, openParenIndex: number): number {
   let depth = 0
-  let maxDepth = 0
-  const loopStack: number[] = []
-
-  for (let i = 0; i < code.length; i++) {
-    const char = code[i]
-
-    if (char === '{') {
-      const precedingSlice = code.slice(Math.max(0, i - 40), i)
-      if (/\b(for|foreach|while)\s*\([^{]*$/.test(precedingSlice)) {
-        loopStack.push(depth + 1)
-      }
-      depth++
-      if (loopStack.length > 0) {
-        maxDepth = Math.max(maxDepth, loopStack.length)
-      }
-    } else if (char === '}') {
-      if (loopStack.length > 0 && loopStack[loopStack.length - 1] === depth) {
-        loopStack.pop()
-      }
-      depth = Math.max(0, depth - 1)
+  for (let i = openParenIndex; i < code.length; i++) {
+    if (code[i] === '(') depth++
+    else if (code[i] === ')') {
+      depth--
+      if (depth === 0) return i
     }
+  }
+  return -1
+}
+
+/**
+ * Locates every braced for/foreach/while loop body in `code` and returns their [openBrace,
+ * closeBrace] index intervals, sorted by start position. Unlike a fixed-width text lookbehind,
+ * this walks the actual `(...)` header (which may be arbitrarily long/nested) to find where the
+ * body starts, so long loop conditions or nested parens never cause a loop to be missed. Loops
+ * with a single-statement (non-braced) body, and the trailing `while (cond);` of a do-while, are
+ * intentionally excluded since they cannot contain a nested braced loop body themselves.
+ */
+function findLoopBodyIntervals(code: string): Array<[number, number]> {
+  const intervals: Array<[number, number]> = []
+  const re = /\b(for|foreach|while)\s*\(/g
+  let match: RegExpExecArray | null
+  while ((match = re.exec(code))) {
+    const openParen = code.indexOf('(', match.index)
+    if (openParen === -1) continue
+    const closeParen = findMatchingParen(code, openParen)
+    if (closeParen === -1) continue
+
+    let i = closeParen + 1
+    while (i < code.length && /\s/.test(code[i])) i++
+    if (code[i] !== '{') continue
+
+    const openBrace = i
+    const closeBrace = findMatchingBrace(code, openBrace)
+    if (closeBrace === -1) continue
+    intervals.push([openBrace, closeBrace])
+  }
+  intervals.sort((a, b) => a[0] - b[0])
+  return intervals
+}
+
+/** Finds the maximum nesting depth of for/foreach/while loops using their actual body intervals. */
+function maxLoopNestingDepth(code: string): number {
+  const intervals = findLoopBodyIntervals(code)
+  let maxDepth = 0
+  const openStack: number[] = [] // close-brace indices of currently-open ancestor loops
+
+  for (const [open, close] of intervals) {
+    while (openStack.length > 0 && openStack[openStack.length - 1] < open) {
+      openStack.pop()
+    }
+    openStack.push(close)
+    maxDepth = Math.max(maxDepth, openStack.length)
   }
 
   return maxDepth
@@ -102,17 +134,7 @@ function maxLoopNestingDepth(code: string): number {
 
 /** Extracts the source text belonging to the innermost loop bodies (used to check what happens inside loops). */
 function extractLoopBodies(code: string): string[] {
-  const bodies: string[] = []
-  const re = /\b(for|foreach|while)\s*\([^{;]*\)\s*\{/g
-  let match: RegExpExecArray | null
-  while ((match = re.exec(code))) {
-    const openBrace = code.indexOf('{', match.index)
-    if (openBrace === -1) continue
-    const closeBrace = findMatchingBrace(code, openBrace)
-    if (closeBrace === -1) continue
-    bodies.push(code.slice(openBrace + 1, closeBrace))
-  }
-  return bodies
+  return findLoopBodyIntervals(code).map(([open, close]) => code.slice(open + 1, close))
 }
 
 /** Splits the whole file into per-method chunks (name, params, body) using brace matching. */
