@@ -10,23 +10,23 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Deploy](https://img.shields.io/badge/Deploy-GitHub%20Pages-222?logo=githubpages&logoColor=white)](https://pages.github.com/)
 
-**[🚀 Live demo →](https://<username>.github.io/codedotnet/)** _(replace with the actual deployed URL)_
+**[🚀 Live demo →](https://hunk7.github.io/codedotnet/)**
 
 ---
 
 ## ✨ What it does
 
-| | |
-|---|---|
-| 📝 | Monaco-powered editor for a single `Program.cs` file with C# syntax highlighting, inline diagnostics, and error navigation. |
-| ▶️ | Click **Run** to compile and execute your code inside a dedicated Web Worker running Roslyn and the .NET WebAssembly runtime, entirely in your browser. |
-| ⌨️ | Supply buffered STDIN before running, and see captured stdout/stderr, exceptions, and timing breakdowns (compile / execute / total) in the output pane. |
-| 📊 | Automatic **time/space Big-O complexity estimate** (with rationale) for the code you just ran. |
-| 🧱 | Resizable, swappable editor/I-O panes, focus modes, and fullscreen support. |
-| 💾 | Editor preferences, theme (light/dark/system), and layout are persisted locally so your workspace is restored next time you visit. |
-| ⚡ | Keyboard shortcuts: `Ctrl/Cmd+Enter` to run, `Shift+F5` to stop, `Ctrl/Cmd+S` to force-save locally, `F11` to toggle fullscreen, plus Monaco's native Find/Replace and Undo/Redo. |
-| 🛑 | Graceful recovery from runaway programs (e.g. infinite loops): **Stop** hard-terminates the worker and a fresh one takes its place. |
-| 🌐 | A clear "unsupported browser" message if required capabilities (WebAssembly, Web Workers, Blob URLs, local storage) are missing, instead of a silent failure. |
+|     |                                                                                                                                                                                   |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 📝  | Monaco-powered editor for a single `Program.cs` file with C# syntax highlighting, inline diagnostics, and error navigation.                                                       |
+| ▶️  | Click **Run** to compile and execute your code inside a dedicated Web Worker running Roslyn and the .NET WebAssembly runtime, entirely in your browser.                           |
+| ⌨️  | Supply buffered STDIN before running, and see captured stdout/stderr, exceptions, and timing breakdowns (compile / execute / total) in the output pane.                           |
+| 📊  | Automatic **time/space Big-O complexity estimate** (with rationale) for the code you just ran.                                                                                    |
+| 🧱  | Resizable, swappable editor/I-O panes, focus modes, and fullscreen support.                                                                                                       |
+| 💾  | Editor preferences, theme (light/dark/system), and layout are persisted locally so your workspace is restored next time you visit.                                                |
+| ⚡  | Keyboard shortcuts: `Ctrl/Cmd+Enter` to run, `Shift+F5` to stop, `Ctrl/Cmd+S` to force-save locally, `F11` to toggle fullscreen, plus Monaco's native Find/Replace and Undo/Redo. |
+| 🛑  | Graceful recovery from runaway programs (e.g. infinite loops): **Stop** hard-terminates the worker and a fresh one takes its place.                                               |
+| 🌐  | A clear "unsupported browser" message if required capabilities (WebAssembly, Web Workers, Blob URLs, local storage) are missing, instead of a silent failure.                     |
 
 ## 🚦 Quick start
 
@@ -55,14 +55,14 @@ npm run build
 
 ## 🗂️ Repository layout
 
-| Path | Purpose |
-|---|---|
-| 🖥️ `codedotnet.web/` | React + TypeScript + Vite frontend (editor, shell, worker manager, complexity estimator). |
-| ⚙️ `codedotnet.compiler/` | .NET 10 `browser-wasm` project: Roslyn compile host, execution host, JS interop. |
-| ✅ `codedotnet.compiler.tests/` | xUnit tests for the compiler/execution host logic (linked source, runs natively). |
-| 🤖 `.github/workflows/deploy.yml` | CI validation + GitHub Pages deployment workflow. |
-| 📦 `.github/dependabot.yml` | Automated weekly dependency updates (npm, NuGet, GitHub Actions). |
-| 📚 `docs/` | Architecture, testing, deployment, security, privacy, limitations, and ADRs. |
+| Path                              | Purpose                                                                                   |
+| --------------------------------- | ----------------------------------------------------------------------------------------- |
+| 🖥️ `codedotnet.web/`              | React + TypeScript + Vite frontend (editor, shell, worker manager, complexity estimator). |
+| ⚙️ `codedotnet.compiler/`         | .NET 10 `browser-wasm` project: Roslyn compile host, execution host, JS interop.          |
+| ✅ `codedotnet.compiler.tests/`   | xUnit tests for the compiler/execution host logic (linked source, runs natively).         |
+| 🤖 `.github/workflows/deploy.yml` | CI validation + GitHub Pages deployment workflow.                                         |
+| 📦 `.github/dependabot.yml`       | Automated weekly dependency updates (npm, NuGet, GitHub Actions).                         |
+| 📚 `docs/`                        | Architecture, testing, deployment, security, privacy, limitations, and ADRs.              |
 
 ## 📖 Documentation
 
@@ -79,4 +79,3 @@ npm run build
 ## 📜 License
 
 MIT — see [`LICENSE`](LICENSE).
-
