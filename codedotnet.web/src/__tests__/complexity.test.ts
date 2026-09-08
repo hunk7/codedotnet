@@ -99,4 +99,47 @@ class Program
     const result = estimateComplexity(source)
     expect(result.time).toBe('O(n^3)')
   })
+
+  it('reports O(n^2) for a nested loop where the inner loop has a non-braced (single-statement) body', () => {
+    const source = `using System;
+using System.Collections.Generic;
+using System.Linq;
+
+public class Program
+{
+\tpublic static void Main()
+\t{
+\t\t// Print Star pattern in reverse
+\t\tfor (int i = 9; i > 1; --i)
+\t\t{
+\t\t\tfor (int j = 1; j < i; j++)
+\t\t\t\tConsole.Write("*");
+\t\t\tConsole.WriteLine();
+\t\t}
+\t}
+}
+`
+    const result = estimateComplexity(source)
+    expect(result.time).toBe('O(n^2)')
+    expect(result.rationale).toContain('two nested loops')
+  })
+
+  it('reports O(n^2) for a doubly non-braced nested loop', () => {
+    const source = `
+using System;
+
+class Program
+{
+    static void Main()
+    {
+        int n = 10;
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+                Console.WriteLine(i + j);
+    }
+}
+`
+    const result = estimateComplexity(source)
+    expect(result.time).toBe('O(n^2)')
+  })
 })

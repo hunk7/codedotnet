@@ -84,13 +84,74 @@ function findMatchingParen(code: string, openParenIndex: number): number {
   return -1
 }
 
+/** Skips whitespace (including newlines) starting at index `i`, returning the next non-whitespace index. */
+function skipWhitespace(code: string, i: number): number {
+  while (i < code.length && /\s/.test(code[i])) i++
+  return i
+}
+
 /**
- * Locates every braced for/foreach/while loop body in `code` and returns their [openBrace,
- * closeBrace] index intervals, sorted by start position. Unlike a fixed-width text lookbehind,
- * this walks the actual `(...)` header (which may be arbitrarily long/nested) to find where the
- * body starts, so long loop conditions or nested parens never cause a loop to be missed. Loops
- * with a single-statement (non-braced) body, and the trailing `while (cond);` of a do-while, are
- * intentionally excluded since they cannot contain a nested braced loop body themselves.
+ * Finds the end index (inclusive) of the single statement/block that starts at `start`. Handles
+ * plain statements (up to the next top-level `;`), braced blocks (`{ ... }`), and single-statement
+ * control constructs (`for`/`foreach`/`while`/`if`/`else` without braces) by recursing into their
+ * body, so a non-braced loop whose body is itself another non-braced loop is still resolved to
+ * its true extent (e.g. `for (...) for (...) Console.Write(...);`).
+ */
+function findStatementEnd(code: string, start: number): number {
+  const i = skipWhitespace(code, start)
+  if (i >= code.length) return code.length - 1
+
+  if (code[i] === '{') {
+    const close = findMatchingBrace(code, i)
+    return close === -1 ? code.length - 1 : close
+  }
+
+  const controlMatch = /^(for|foreach|while|if|else)\b\s*/.exec(code.slice(i))
+  if (controlMatch) {
+    const keyword = controlMatch[1]
+    let afterKeyword = i + controlMatch[0].length
+
+    if (keyword === 'else') {
+      // `else if (...)` behaves like another condition; otherwise the body follows directly.
+      return findStatementEnd(code, afterKeyword)
+    }
+
+    if (code[afterKeyword] === '(') {
+      const closeParen = findMatchingParen(code, afterKeyword)
+      afterKeyword = closeParen === -1 ? afterKeyword : closeParen + 1
+    }
+
+    const bodyEnd = findStatementEnd(code, afterKeyword)
+
+    if (keyword === 'if') {
+      const afterBody = skipWhitespace(code, bodyEnd + 1)
+      if (/^else\b/.test(code.slice(afterBody))) {
+        return findStatementEnd(code, afterBody)
+      }
+    }
+
+    return bodyEnd
+  }
+
+  // Plain statement: scan to the next top-level `;` (not nested inside (), {}, or []).
+  let depth = 0
+  for (let j = i; j < code.length; j++) {
+    const c = code[j]
+    if (c === '(' || c === '{' || c === '[') depth++
+    else if (c === ')' || c === '}' || c === ']') depth--
+    else if (c === ';' && depth === 0) return j
+  }
+  return code.length - 1
+}
+
+/**
+ * Locates every for/foreach/while loop body in `code` and returns their [bodyStart, bodyEnd]
+ * index intervals (covering both braced `{ ... }` bodies and single-statement bodies), sorted by
+ * start position. Unlike a fixed-width text lookbehind, this walks the actual `(...)` header
+ * (which may be arbitrarily long/nested) to find where the body starts, so long loop conditions
+ * or nested parens never cause a loop to be missed. Single-statement loop bodies are resolved via
+ * `findStatementEnd` so nested loops without braces (e.g. `for (...) for (...) Foo();`) are still
+ * detected as nested. The trailing `while (cond);` of a do-while is excluded since it has no body.
  */
 function findLoopBodyIntervals(code: string): Array<[number, number]> {
   const intervals: Array<[number, number]> = []
@@ -102,14 +163,11 @@ function findLoopBodyIntervals(code: string): Array<[number, number]> {
     const closeParen = findMatchingParen(code, openParen)
     if (closeParen === -1) continue
 
-    let i = closeParen + 1
-    while (i < code.length && /\s/.test(code[i])) i++
-    if (code[i] !== '{') continue
+    const bodyStart = skipWhitespace(code, closeParen + 1)
+    if (bodyStart >= code.length || code[bodyStart] === ';') continue // do-while's trailing `while (cond);`
 
-    const openBrace = i
-    const closeBrace = findMatchingBrace(code, openBrace)
-    if (closeBrace === -1) continue
-    intervals.push([openBrace, closeBrace])
+    const bodyEnd = findStatementEnd(code, bodyStart)
+    intervals.push([bodyStart, bodyEnd])
   }
   intervals.sort((a, b) => a[0] - b[0])
   return intervals
@@ -119,7 +177,7 @@ function findLoopBodyIntervals(code: string): Array<[number, number]> {
 function maxLoopNestingDepth(code: string): number {
   const intervals = findLoopBodyIntervals(code)
   let maxDepth = 0
-  const openStack: number[] = [] // close-brace indices of currently-open ancestor loops
+  const openStack: number[] = [] // body-end indices of currently-open ancestor loops
 
   for (const [open, close] of intervals) {
     while (openStack.length > 0 && openStack[openStack.length - 1] < open) {
@@ -134,7 +192,9 @@ function maxLoopNestingDepth(code: string): number {
 
 /** Extracts the source text belonging to the innermost loop bodies (used to check what happens inside loops). */
 function extractLoopBodies(code: string): string[] {
-  return findLoopBodyIntervals(code).map(([open, close]) => code.slice(open + 1, close))
+  return findLoopBodyIntervals(code).map(([open, close]) =>
+    code[open] === '{' ? code.slice(open + 1, close) : code.slice(open, close + 1),
+  )
 }
 
 /** Splits the whole file into per-method chunks (name, params, body) using brace matching. */
