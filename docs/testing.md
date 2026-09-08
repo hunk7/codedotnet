@@ -19,6 +19,9 @@ Run all commands from the `codedotnet.web` directory.
   initializes, and presence of Run/Stop/Clear/Reset/Download/Settings/About controls once ready.
 - `src/__tests__/browserSupport.test.ts` — Feature-detection logic (`detectFeatureSupport`,
   `isBrowserSupported`, `getMissingRequiredFeatures`) used for the unsupported-browser fallback.
+- `src/__tests__/complexity.test.ts` — Static Big-O time/space complexity estimator
+  (`estimateComplexity`): simple/triple nested loops, sequential (non-nested) loops, and loops
+  with non-braced single-statement bodies.
 - `src/__tests__/diagnostics.test.ts` — Conversion of compiler diagnostics into Monaco markers.
 - `src/__tests__/editorSettings.test.ts` — Settings/layout/theme persistence, defaults,
   validation, and migration behavior against `localStorage`.
