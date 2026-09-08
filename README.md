@@ -12,6 +12,8 @@
 
 **[🚀 Live demo →](https://hunk7.github.io/codedotnet/)**
 
+<img width="1280" height="720" alt="image" src="https://github.com/user-attachments/assets/a9f57c98-0647-433b-be8b-97544fc6d8ec" />
+
 ---
 
 ## ✨ What it does
