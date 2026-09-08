@@ -12,6 +12,8 @@
 
 **[🚀 Live demo →](https://hunk7.github.io/codedotnet/)**
 
+<img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/d59efef3-99c7-409d-a382-81e15770a36c" />
+
 ---
 
 ## ✨ What it does
@@ -54,6 +56,8 @@ npm run build
 ```
 
 ## 🗂️ Repository layout
+
+<img width="187" height="261" alt="image" src="https://github.com/user-attachments/assets/c4c182b2-ef47-4dde-9300-be9a6c7da342" />
 
 | Path                              | Purpose                                                                                   |
 | --------------------------------- | ----------------------------------------------------------------------------------------- |
