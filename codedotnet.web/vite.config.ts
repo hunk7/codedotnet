@@ -23,6 +23,24 @@ export default defineConfig({
     __APP_BUILD_DATE__: JSON.stringify(new Date().toISOString()),
   },
   plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
+  build: {
+    // monaco-editor is inherently large; it is split into its own chunk (see manualChunks below)
+    // so it can be cached independently of app code, but it still exceeds the default 500 kB
+    // warning threshold. Raise the limit instead of silencing real regressions in app chunks.
+    chunkSizeWarningLimit: 2800,
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes('node_modules/monaco-editor')) {
+            return 'monaco-editor'
+          }
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+            return 'react'
+          }
+        },
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: true,

@@ -140,27 +140,29 @@ function McpPlayground() {
         </section>
       )}
 
-      <section className="mcp-playground__editor pane pane--editor">
-        <MonacoEditor
-          ref={editorRef}
-          defaultValue={source}
-          onChange={setSource}
-          theme="vs-dark"
-          settings={DEFAULT_EDITOR_SETTINGS}
-        />
-      </section>
+      <section className="mcp-playground__workspace">
+        <section className="mcp-playground__editor pane pane--editor">
+          <MonacoEditor
+            ref={editorRef}
+            defaultValue={source}
+            onChange={setSource}
+            theme="vs-dark"
+            settings={DEFAULT_EDITOR_SETTINGS}
+          />
+        </section>
 
-      <div className="mcp-playground__actions">
-        <button
-          type="button"
-          className="toolbar-button toolbar-button--run"
-          onClick={() => void handleRun()}
-          disabled={!isConnected || isCalling}
-        >
-          <PlayIcon />
-          <span>{isCalling ? 'Calling tools/call…' : 'Call compile_and_run'}</span>
-        </button>
-      </div>
+        <div className="mcp-playground__actions">
+          <button
+            type="button"
+            className="toolbar-button toolbar-button--run"
+            onClick={() => void handleRun()}
+            disabled={!isConnected || isCalling}
+          >
+            <PlayIcon />
+            <span>{isCalling ? 'Calling tools/call…' : 'Call compile_and_run'}</span>
+          </button>
+        </div>
+      </section>
 
       {callError && <p className="mcp-playground__error">{callError}</p>}
 
