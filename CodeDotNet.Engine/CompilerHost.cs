@@ -1,17 +1,19 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using CodeDotNet.Contracts;
 
-namespace CodeDotNet.Compiler;
+namespace CodeDotNet.Engine;
 
 /// <summary>
-/// Configures and runs Roslyn compilation of a single <c>Program.cs</c> source file for the
-/// browser worker, per FR-041 through FR-051.
+/// Configures and runs Roslyn compilation of a single <c>Program.cs</c> source file.
+/// Shared by every host (browser-wasm worker, MCP sandbox worker) so execution semantics
+/// exist in exactly one place.
 /// </summary>
-internal static class CompilerHost
+public static class CompilerHost
 {
     private const string AssemblyName = "codedotnet-user-program";
 
-    /// <summary>Curated reference assemblies supporting the FR-043 surface area.</summary>
+    /// <summary>Curated reference assemblies supporting the documented FR-043 surface area.</summary>
     /// <remarks>
     /// <see cref="LazyThreadSafetyMode.PublicationOnly"/> is used because the browser-wasm host
     /// does not support blocking waits on a lock's monitor ("Cannot wait on monitors on this
@@ -20,8 +22,8 @@ internal static class CompilerHost
     /// single published result but never blocks a thread waiting on another; at worst the
     /// factory runs more than once, which is safe here since <see cref="BuildReferences"/> is
     /// pure and side-effect free. Unlike <see cref="LazyThreadSafetyMode.None"/>, it also remains
-    /// safe under genuine multi-threaded access (e.g. parallel test execution) instead of
-    /// throwing a reentrancy exception.
+    /// safe under genuine multi-threaded access (e.g. parallel test execution, or concurrent MCP
+    /// sandbox workers) instead of throwing a reentrancy exception.
     /// </remarks>
     private static readonly Lazy<MetadataReference[]> References = new(BuildReferences, LazyThreadSafetyMode.PublicationOnly);
 
@@ -46,7 +48,8 @@ internal static class CompilerHost
             // Roslyn's default (true) parallelizes binding/diagnostics via the thread pool.
             // The single-threaded browser-wasm runtime cannot service that parallelism and
             // throws "Cannot wait on monitors on this runtime" the moment any real contention
-            // occurs, so concurrent build must be disabled here.
+            // occurs, so concurrent build must be disabled here. Kept disabled for every host
+            // (including desktop/Node) so the compiler behaves identically everywhere.
             concurrentBuild: false);
 
         var compilation = CSharpCompilation.Create(
@@ -114,7 +117,8 @@ internal static class CompilerHost
         // Instead, use the Basic.Reference.Assemblies package, which embeds pre-built reference
         // assembly bytes as resources and exposes them as ready-to-use MetadataReference
         // instances. This has no dependency on the file system or on which assemblies happen to
-        // already be loaded into the current process, so it works reliably in browser-wasm.
+        // already be loaded into the current process, so it works reliably in browser-wasm, in
+        // desktop test hosts, and in Node.js-hosted wasm workers alike.
         //
         // IMPORTANT: this must match the worker's own TargetFramework (net10.0). Using the Net90
         // reference set here caused every compiled program to bind to "System.Runtime,
@@ -124,15 +128,3 @@ internal static class CompilerHost
         return [.. Basic.Reference.Assemblies.Net100.References.All];
     }
 }
-
-internal sealed record CompileResult(bool Success, DiagnosticInfo[] Diagnostics, byte[]? AssemblyBytes);
-
-internal sealed record DiagnosticInfo(
-    string Id,
-    string Severity,
-    string Message,
-    string? FilePath,
-    int StartLine,
-    int StartColumn,
-    int EndLine,
-    int EndColumn);

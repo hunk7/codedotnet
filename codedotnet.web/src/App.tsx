@@ -18,6 +18,7 @@ import MonacoEditor, { type MonacoEditorHandle } from './components/MonacoEditor
 import SettingsPanel from './components/SettingsPanel'
 import AboutDialog from './components/AboutDialog'
 import ErrorBoundary from './components/ErrorBoundary'
+import McpPlayground from './mcp/McpPlayground'
 import { diagnosticsToMarkers } from './diagnostics'
 import { estimateComplexity, type ComplexityEstimate } from './complexity'
 import {
@@ -99,6 +100,7 @@ function App() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [saveState, setSaveState] = useState<'saved' | 'pending' | 'unavailable'>('saved')
   const [hasBootstrapped, setHasBootstrapped] = useState(false)
+  const [activeView, setActiveView] = useState<'editor' | 'mcp'>('editor')
 
   const [source, setSource] = useState(() => loadSource())
   const stdin = ''
@@ -574,6 +576,23 @@ function App() {
           codedotnet
         </span>
 
+        <div className="app-shell__view-tabs">
+          <button
+            type="button"
+            className={`toolbar-button toolbar-button--extra${activeView === 'editor' ? ' toolbar-button--active' : ''}`}
+            onClick={() => setActiveView('editor')}
+          >
+            <span>Editor</span>
+          </button>
+          <button
+            type="button"
+            className={`toolbar-button toolbar-button--extra${activeView === 'mcp' ? ' toolbar-button--active' : ''}`}
+            onClick={() => setActiveView('mcp')}
+          >
+            <span>MCP Playground</span>
+          </button>
+        </div>
+
         <div className="app-shell__actions">
           <button
             type="button"
@@ -698,7 +717,11 @@ function App() {
         className="app-shell__workspace"
         data-pane-order={layoutSettings.paneOrder}
       >
-        {focusMode === 'editor' ? (
+        {activeView === 'mcp' ? (
+          <ErrorBoundary label="MCP Playground">
+            <McpPlayground />
+          </ErrorBoundary>
+        ) : focusMode === 'editor' ? (
           <div className="pane-wrapper" style={{ flexBasis: '100%' }}>
             {editorPane}
           </div>

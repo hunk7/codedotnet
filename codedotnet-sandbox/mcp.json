@@ -1,0 +1,27 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schema/mcp-server-manifest.json",
+  "name": "codedotnet-sandbox",
+  "version": "0.1.0",
+  "description": "Sandboxed single-file C# compile-and-run tool, backed by the CodeDotNet.Engine Roslyn/wasm pipeline. Every request runs in a disposable, hard-timeout-enforced child process.",
+  "repository": "https://github.com/hunk7/codedotnet",
+  "license": "MIT",
+  "transports": [
+    {
+      "type": "stdio",
+      "command": "node",
+      "args": ["src/server.mjs"],
+      "cwd": "codedotnet-sandbox"
+    },
+    {
+      "type": "websocket",
+      "url": "ws://127.0.0.1:7900",
+      "note": "Start with `npm run serve` from codedotnet-sandbox. Used by the browser MCP Playground in codedotnet.web; not part of the standard MCP client transports."
+    }
+  ],
+  "tools": [
+    {
+      "name": "compile_and_run",
+      "description": "Compiles and executes a single-file C# program using the curated CodeDotNet reference surface, inside a disposable, hard-timeout-enforced sandbox process."
+    }
+  ]
+}

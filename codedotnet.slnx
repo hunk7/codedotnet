@@ -1,4 +1,6 @@
-<Solution>
+﻿<Solution>
+  <Project Path="CodeDotNet.Contracts/CodeDotNet.Contracts.csproj" />
+  <Project Path="CodeDotNet.Engine/CodeDotNet.Engine.csproj" />
+  <Project Path="CodeDotNet.Engine.Tests/CodeDotNet.Engine.Tests.csproj" />
   <Project Path="codedotnet.compiler/codedotnet.compiler.csproj" />
-  <Project Path="codedotnet.compiler.tests/codedotnet.compiler.tests.csproj" />
 </Solution>

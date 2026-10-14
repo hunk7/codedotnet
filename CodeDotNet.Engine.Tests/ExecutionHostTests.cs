@@ -1,11 +1,12 @@
-using CodeDotNet.Compiler;
+using CodeDotNet.Engine;
 using Xunit;
 
-namespace CodeDotNet.Compiler.Tests;
+namespace CodeDotNet.Engine.Tests;
 
 /// <summary>
-/// Verifies <see cref="ExecutionHost"/> behavior (FR-060 through FR-074): console output capture,
-/// buffered STDIN, unhandled exceptions, and the 100,000-character output truncation limit.
+/// Verifies <see cref="ExecutionHost"/> behavior (FR-060 through FR-074): console output
+/// capture, buffered STDIN, unhandled exceptions, and the 100,000-character output
+/// truncation limit.
 /// </summary>
 public class ExecutionHostTests
 {

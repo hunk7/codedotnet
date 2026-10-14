@@ -135,15 +135,25 @@ export class WorkerManager {
       stdin,
     }) as Promise<CompileAndRunResponsePayload>
 
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined
+
     const timeoutPromise = new Promise<CompileAndRunResponsePayload>((_resolve, reject) => {
-      setTimeout(() => {
+      timeoutHandle = setTimeout(() => {
         this.stop()
         void this.initialize()
         reject(new Error('Execution timed out'))
       }, timeoutMs)
     })
 
-    return Promise.race([requestPromise, timeoutPromise])
+    try {
+      return await Promise.race([requestPromise, timeoutPromise])
+    } finally {
+      // Without this, a successful (or otherwise-failed) request left the timeout handle
+      // running; when it later fired it called stop()/initialize() on an already-idle,
+      // unrelated worker, causing a spurious reinitialize/state flap long after the
+      // original request had completed.
+      clearTimeout(timeoutHandle)
+    }
   }
 
   private send<TPayload = undefined>(
