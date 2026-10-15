@@ -44,7 +44,7 @@ disposable, hard-timeout-enforced child process.
 The **MCP Playground** tab in the web app is an in-browser client for this server over a
 WebSocket transport (`ws://127.0.0.1:7900` by default):
 
-<img width="100%" alt="MCP Playground: connected to ws://127.0.0.1:7900, showing the discovered compile_and_run tool, a Singleton pattern C# sample in the editor, and the execution result pane with status, captured output, a nullable-reference warning, timing breakdown, and the raw JSON-RPC tools/call response" src="docs/images/mcp-playground.png" />
+<img width="100%" alt="MCP Playground: connected to ws://127.0.0.1:7900, showing the discovered compile_and_run tool, a Singleton pattern C# sample in the editor, and the execution result pane with status, captured output, a nullable-reference warning, timing breakdown, and the raw JSON-RPC tools/call response" src="docs/images/MCP-Playground.png" />
 
 | | |
 | --- | --- |
