@@ -104,3 +104,46 @@ Browser Main Thread
 
 See also: [`docs/security.md`](security.md) for the security model and CSP, and
 [`docs/privacy.md`](privacy.md) for the data-handling and privacy-verification procedure.
+
+## 14. MCP Playground (optional, out-of-browser-sandbox component)
+
+Unlike the fully client-side playground above, the **MCP Playground** tab talks to an external
+Node.js process (`codedotnet-sandbox/`) implementing the Model Context Protocol:
+
+```plaintext
+Browser (MCP Playground tab)
+     │
+     │ WebSocket, JSON-RPC 2.0 (initialize / tools/list / tools/call)
+     ▼
+codedotnet-sandbox/src/wsServer.mjs
+     │
+     ▼
+codedotnet-sandbox/src/mcpCore.mjs      <- shared tool metadata + dispatch (also used by stdio transport)
+     │
+     ▼
+codedotnet-sandbox/src/workerPool.mjs   <- disposable, hard-timeout-enforced child processes
+     │
+     ▼
+codedotnet-sandbox/src/worker.mjs (child process)
+     │
+     ▼
+codedotnet.web/public/dotnet-worker/wwwroot/_framework/dotnet.js
+     (the same published CodeDotNet.Engine wasm artifact used by the in-browser Web Worker)
+```
+
+Key properties:
+
+- `src/mcp/mcpClient.ts` is a small JSON-RPC-over-WebSocket client used only by the MCP Playground
+  tab; it does not affect the default Editor view or its Web Worker execution path.
+- The server reuses the same compiled `CodeDotNet.Engine` artifact as the browser, so
+  `compile_and_run` results are consistent between the two playgrounds.
+- Each `compile_and_run` call runs in its own disposable child process with a hard timeout
+  (`SIGKILL` on expiry), not in-process `Promise.race`, because synchronous wasm execution blocks
+  the Node.js event loop (see `codedotnet-sandbox/README.md` and
+  `docs/research/SPIKE_FINDINGS.md`).
+- The same `tools/list`/`tools/call` dispatch (`mcpCore.mjs`) is shared between the stdio transport
+  (`server.mjs`, for VS Code/Claude Desktop-style MCP clients) and the WebSocket transport
+  (`wsServer.mjs`, for the browser).
+
+See [`codedotnet-sandbox/README.md`](../codedotnet-sandbox/README.md) for isolation details, the
+tool contract, and how to register the server with an MCP client.
