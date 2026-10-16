@@ -37,7 +37,8 @@
 
 codedotnet also ships a [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server
 (`codedotnet-sandbox/`) that exposes the exact same `compile_and_run` capability as a tool any
-MCP-aware client (VS Code, Claude Desktop, or the browser) can call — reusing the same
+MCP-aware client (VS Code, Claude Desktop, Cursor, Continue, the browser, or a custom
+JSON-RPC-over-stdio/WebSocket script) can call — reusing the same
 `CodeDotNet.Engine`-backed WebAssembly artifact as the main playground, but isolated per-call in a
 disposable, hard-timeout-enforced child process.
 
@@ -54,6 +55,14 @@ WebSocket transport (`ws://127.0.0.1:7900` by default):
 | ▶️ | **Call compile_and_run** invokes the tool over JSON-RPC 2.0 and renders the parsed result: status (e.g. `ExecutionCompleted`, `ExecutionCompletedWithWarnings`), captured stdout, diagnostics/warnings with file/line/column, and a `build / run / total` timing breakdown. |
 | 🔍 | A collapsible **Raw JSON-RPC tools/call response** section shows the exact wire payload for debugging or integrating your own MCP client. |
 
+> ⚠️ **Note:** The **[live demo](https://hunk7.github.io/codedotnet/)** is a static GitHub Pages
+> site and cannot run the MCP WebSocket sandbox server, so the MCP Playground tab will show
+> **Disconnected** there. The sandbox (`codedotnet-sandbox/`) is a Node.js process that forks a
+> pool of disposable child processes — each cold-booting the .NET WebAssembly runtime
+> (~1.5-2s) — to isolate and hard-timeout every `compile_and_run` call. That's intentionally
+> heavy for a hosted/serverless environment, so it is **not deployed**; you must run it
+> **locally** (see below) to get a live MCP connection.
+
 To try it locally:
 
 ```powershell
@@ -68,10 +77,16 @@ npm install
 npm run dev
 ```
 
+**Requirements:** [Node.js 22+](https://nodejs.org/) for both processes, and the
+[.NET 10 SDK](https://dotnet.microsoft.com/download) to publish the `codedotnet.compiler`
+browser-wasm artifact the sandbox reuses (one-time step: `dotnet publish -c Release
+codedotnet.compiler/codedotnet.compiler.csproj`, or run `scripts/copy-worker-assets.ps1`).
+
 Open the printed dev server URL, switch to the **MCP Playground** tab, click **Connect**, and
 run the sample program. See
 [`codedotnet-sandbox/README.md`](codedotnet-sandbox/README.md) for the stdio transport, worker-pool
-isolation model, and instructions for registering the server with VS Code or Claude Desktop.
+isolation model, and instructions for registering the server with VS Code, Claude Desktop,
+Cursor, Continue, or any other MCP-aware/JSON-RPC client.
 
 ## 🚦 Quick start
 

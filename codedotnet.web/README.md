@@ -14,6 +14,9 @@ rendering both the parsed result and the raw JSON-RPC response. See the root REA
 [MCP Playground section](../README.md#-mcp-playground) and
 [`codedotnet-sandbox/README.md`](../codedotnet-sandbox/README.md) for how to run the server.
 
+> **Note:** Live MCP functionality requires the sandbox's WebSocket server running locally
+> (`ws://127.0.0.1:7900` by default) — it is not available on the hosted GitHub Pages demo.
+
 ## 🚦 Local development
 
 ```powershell

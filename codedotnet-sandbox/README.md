@@ -123,6 +123,12 @@ edit the sample C# program, and click **Call compile_and_run**. The panel shows 
 parsed result (status, output, diagnostics, timings) as well as the raw JSON-RPC
 `tools/call` response for transparency.
 
+> **Why this isn't hosted:** each `compile_and_run` call forks a disposable child process
+> that cold-boots the .NET WebAssembly runtime (~1.5-2s), and the default pool keeps 2 of
+> these warm at all times. That's appropriate for a local dev machine but too heavy/stateful
+> for a serverless static-site deployment (e.g. GitHub Pages), so this server is never
+> deployed — it must be run locally by anyone who wants a live MCP Playground connection.
+
 Set `MCP_ALLOWED_ORIGIN` (exact origin string, or `*` to disable the check) if the web
 app is served from somewhere other than `localhost`. By default the WebSocket server
 accepts any origin in local development; tighten this before exposing it beyond your
@@ -162,4 +168,40 @@ transport and tool surface, for tooling that can consume it directly.
 
 Either client will discover the single `compile_and_run` tool via `tools/list` and can
 invoke it with `{ "source": "...", "stdin": "...", "timeoutMs": 10000 }`.
+
+### Cursor (`.cursor/mcp.json`)
+
+```json
+{
+  "mcpServers": {
+    "codedotnet-sandbox": {
+      "command": "node",
+      "args": ["src/server.mjs"],
+      "cwd": "${workspaceFolder}/codedotnet-sandbox"
+    }
+  }
+}
+```
+
+### Continue (`config.json` / `config.yaml` `mcpServers` entry)
+
+```json
+{
+  "mcpServers": {
+    "codedotnet-sandbox": {
+      "command": "node",
+      "args": ["src/server.mjs"],
+      "cwd": "/absolute/path/to/codedotnet/codedotnet-sandbox"
+    }
+  }
+}
+```
+
+### Any other MCP-aware client (generic JSON-RPC)
+
+Any client that speaks MCP's stdio JSON-RPC 2.0 framing can shell out to
+`node src/server.mjs` directly (see `mcp.json` for the manifest). For a browser or
+script-based client that can't spawn processes, connect over WebSocket instead — start
+`npm run serve` and speak the same `initialize` / `tools/list` / `tools/call` JSON-RPC
+methods over `ws://127.0.0.1:7900` (one JSON-RPC message per text frame).
 
