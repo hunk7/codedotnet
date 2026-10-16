@@ -1,14 +1,14 @@
 using System.Text;
-using System.Runtime.Versioning;
+using CodeDotNet.Contracts;
 
-namespace CodeDotNet.Compiler;
+namespace CodeDotNet.Engine;
 
 /// <summary>
-/// Loads an in-memory emitted assembly and executes its entry point inside the worker,
-/// capturing console output, stdin, exceptions and timings (FR-060 through FR-074).
+/// Loads an in-memory emitted assembly and executes its entry point, capturing console
+/// output, stdin, exceptions and timings. Shared by every host (browser-wasm worker, MCP
+/// sandbox worker).
 /// </summary>
-[SupportedOSPlatform("browser")]
-internal static class ExecutionHost
+public static class ExecutionHost
 {
     private const int MaxOutputCharacters = 100_000;
 
@@ -49,7 +49,8 @@ internal static class ExecutionHost
         // (Arg_PlatformNotSupported) because it tries to lazily create a real stdin stream,
         // which does not exist in the browser. Console.SetIn(...) itself is safe (it just
         // stores a field), so we never read the original reader back - there is nothing
-        // meaningful to restore to on this platform.
+        // meaningful to restore to on this platform. On desktop/Node-hosted platforms this
+        // getter succeeds normally and the original reader is restored.
         TextReader? originalIn = null;
         try
         {
@@ -142,11 +143,3 @@ internal static class ExecutionHost
         public override void WriteLine(string? value) => onWrite((value ?? string.Empty) + Environment.NewLine);
     }
 }
-
-internal sealed record ExecutionResult(
-    string Output,
-    bool OutputTruncated,
-    int ExitCode,
-    string? ExceptionType,
-    string? ExceptionMessage,
-    string? ExceptionStackTrace);

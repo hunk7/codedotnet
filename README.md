@@ -7,12 +7,15 @@
 [![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-Build-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![MCP](https://img.shields.io/badge/MCP-Playground-00A389?logo=modelcontextprotocol&logoColor=white)](#-mcp-playground)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Deploy](https://img.shields.io/badge/Deploy-GitHub%20Pages-222?logo=githubpages&logoColor=white)](https://pages.github.com/)
 
 **[🚀 Live demo →](https://hunk7.github.io/codedotnet/)**
 
-<img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/d59efef3-99c7-409d-a382-81e15770a36c" />
+> 🔌 Also includes an **[MCP Playground](#-mcp-playground)** — a Model Context Protocol server + in-browser client that exposes `compile_and_run` as a tool for VS Code, Claude Desktop, and any other MCP-aware client.
+
+<img width="100%" alt="codedotnet main editor: Monaco-powered C# editor pane on the left with syntax highlighting, and an output pane on the right showing captured stdout, diagnostics, and timing information" src="docs/images/Editor.png" />
 
 ---
 
@@ -29,6 +32,61 @@
 | ⚡  | Keyboard shortcuts: `Ctrl/Cmd+Enter` to run, `Shift+F5` to stop, `Ctrl/Cmd+S` to force-save locally, `F11` to toggle fullscreen, plus Monaco's native Find/Replace and Undo/Redo. |
 | 🛑  | Graceful recovery from runaway programs (e.g. infinite loops): **Stop** hard-terminates the worker and a fresh one takes its place.                                               |
 | 🌐  | A clear "unsupported browser" message if required capabilities (WebAssembly, Web Workers, Blob URLs, local storage) are missing, instead of a silent failure.                     |
+
+## 🔌 MCP Playground
+
+codedotnet also ships a [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server
+(`codedotnet-sandbox/`) that exposes the exact same `compile_and_run` capability as a tool any
+MCP-aware client (VS Code, Claude Desktop, Cursor, Continue, the browser, or a custom
+JSON-RPC-over-stdio/WebSocket script) can call — reusing the same
+`CodeDotNet.Engine`-backed WebAssembly artifact as the main playground, but isolated per-call in a
+disposable, hard-timeout-enforced child process.
+
+The **MCP Playground** tab in the web app is an in-browser client for this server over a
+WebSocket transport (`ws://127.0.0.1:7900` by default):
+
+<img width="100%" alt="MCP Playground: connected to ws://127.0.0.1:7900, showing the discovered compile_and_run tool, a Singleton pattern C# sample in the editor, and the execution result pane with status, captured output, a nullable-reference warning, timing breakdown, and the raw JSON-RPC tools/call response" src="docs/images/MCP-Playground.png" />
+
+| | |
+| --- | --- |
+| 🔗 | Connect to any MCP WebSocket endpoint (defaults to the local sandbox) and see its **Connected**/**Disconnected** status live. |
+| 🧰 | **Discovered tools** panel lists every tool the server advertises via `tools/list`, with its description. |
+| 📝 | Edit a single-file C# program in the same Monaco-powered editor used by the main playground. |
+| ▶️ | **Call compile_and_run** invokes the tool over JSON-RPC 2.0 and renders the parsed result: status (e.g. `ExecutionCompleted`, `ExecutionCompletedWithWarnings`), captured stdout, diagnostics/warnings with file/line/column, and a `build / run / total` timing breakdown. |
+| 🔍 | A collapsible **Raw JSON-RPC tools/call response** section shows the exact wire payload for debugging or integrating your own MCP client. |
+
+> ⚠️ **Note:** The **[live demo](https://hunk7.github.io/codedotnet/)** is a static GitHub Pages
+> site and cannot run the MCP WebSocket sandbox server, so the MCP Playground tab will show
+> **Disconnected** there. The sandbox (`codedotnet-sandbox/`) is a Node.js process that forks a
+> pool of disposable child processes — each cold-booting the .NET WebAssembly runtime
+> (~1.5-2s) — to isolate and hard-timeout every `compile_and_run` call. That's intentionally
+> heavy for a hosted/serverless environment, so it is **not deployed**; you must run it
+> **locally** (see below) to get a live MCP connection.
+
+To try it locally:
+
+```powershell
+# Terminal 1: start the MCP WebSocket server (ws://127.0.0.1:7900)
+cd codedotnet-sandbox
+npm install
+npm run serve
+
+# Terminal 2: start the web app
+cd codedotnet.web
+npm install
+npm run dev
+```
+
+**Requirements:** [Node.js 22+](https://nodejs.org/) for both processes, and the
+[.NET 10 SDK](https://dotnet.microsoft.com/download) to publish the `codedotnet.compiler`
+browser-wasm artifact the sandbox reuses (one-time step: `dotnet publish -c Release
+codedotnet.compiler/codedotnet.compiler.csproj`, or run `scripts/copy-worker-assets.ps1`).
+
+Open the printed dev server URL, switch to the **MCP Playground** tab, click **Connect**, and
+run the sample program. See
+[`codedotnet-sandbox/README.md`](codedotnet-sandbox/README.md) for the stdio transport, worker-pool
+isolation model, and instructions for registering the server with VS Code, Claude Desktop,
+Cursor, Continue, or any other MCP-aware/JSON-RPC client.
 
 ## 🚦 Quick start
 
@@ -64,6 +122,7 @@ npm run build
 | 🖥️ `codedotnet.web/`              | React + TypeScript + Vite frontend (editor, shell, worker manager, complexity estimator). |
 | ⚙️ `codedotnet.compiler/`         | .NET 10 `browser-wasm` project: Roslyn compile host, execution host, JS interop.          |
 | ✅ `codedotnet.compiler.tests/`   | xUnit tests for the compiler/execution host logic (linked source, runs natively).         |
+| 🧰 `codedotnet-sandbox/`           | Node.js MCP server: stdio + WebSocket transports for a sandboxed `compile_and_run` tool. |
 | 🤖 `.github/workflows/deploy.yml` | CI validation + GitHub Pages deployment workflow.                                         |
 | 📦 `.github/dependabot.yml`       | Automated weekly dependency updates (npm, NuGet, GitHub Actions).                         |
 | 📚 `docs/`                        | Architecture, testing, deployment, security, privacy, limitations, and ADRs.              |
@@ -78,6 +137,7 @@ npm run build
 - 🕵️ [`docs/privacy.md`](docs/privacy.md) — what happens to your code, and how to verify it yourself.
 - ⚠️ [`docs/known-limitations.md`](docs/known-limitations.md) — buffered STDIN, single-file constraint, no NuGet restore, browser resource limits.
 - 📝 [`docs/adr/`](docs/adr/) — Architecture Decision Records (ADR-001 through ADR-008).
+- 🧩 [`codedotnet-sandbox/README.md`](codedotnet-sandbox/README.md) — MCP server: architecture, isolation model, tool contract, and MCP client registration.
 - ©️ [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) — third-party license notices.
 
 ## 📜 License

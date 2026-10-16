@@ -1,7 +1,7 @@
-using CodeDotNet.Compiler;
+using CodeDotNet.Engine;
 using Xunit;
 
-namespace CodeDotNet.Compiler.Tests;
+namespace CodeDotNet.Engine.Tests;
 
 /// <summary>
 /// Verifies the curated reference surface and diagnostic behavior of <see cref="CompilerHost"/>

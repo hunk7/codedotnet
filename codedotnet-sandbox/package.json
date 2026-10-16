@@ -1,0 +1,28 @@
+{
+  "name": "codedotnet-sandbox",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MCP stdio server exposing a sandboxed C# compile-and-run tool, backed by the same CodeDotNet.Engine Roslyn/wasm pipeline used by the browser host. Each request runs in a disposable child process so a runaway or malicious user program can be hard-terminated.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "src/server.mjs",
+  "bin": {
+    "codedotnet-sandbox": "src/server.mjs"
+  },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "serve": "node src/wsServer.mjs",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hunk7/codedotnet"
+  },
+  "keywords": ["mcp", "model-context-protocol", "csharp", "sandbox", "roslyn", "wasm"],
+  "license": "MIT"
+}

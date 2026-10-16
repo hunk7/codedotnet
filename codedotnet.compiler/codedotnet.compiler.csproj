@@ -26,8 +26,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
-    <PackageReference Include="Basic.Reference.Assemblies.Net100" Version="1.8.11" />
+    <ProjectReference Include="..\CodeDotNet.Contracts\CodeDotNet.Contracts.csproj" />
+    <ProjectReference Include="..\CodeDotNet.Engine\CodeDotNet.Engine.csproj" />
   </ItemGroup>
 
 </Project>

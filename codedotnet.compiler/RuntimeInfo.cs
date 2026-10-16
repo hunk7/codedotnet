@@ -1,15 +1,14 @@
 using System.Runtime.InteropServices.JavaScript;
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using Microsoft.CodeAnalysis.CSharp;
+using CodeDotNet.Contracts;
 
 namespace CodeDotNet.Compiler;
 
 /// <summary>
-/// Exposes runtime and diagnostic information to the React host running on the main thread,
-/// via JavaScript interop calls made from inside the dedicated Web Worker.
+/// Thin browser-wasm JS interop adapter exposing <c>CodeDotNet.Engine</c>'s runtime
+/// information to the React host running on the main thread, via JavaScript interop calls
+/// made from inside the dedicated Web Worker.
 /// </summary>
 [SupportedOSPlatform("browser")]
 public partial class RuntimeInfo
@@ -17,30 +16,7 @@ public partial class RuntimeInfo
     [JSExport]
     internal static string GetRuntimeInformation()
     {
-        var info = new RuntimeInformationPayload(
-            FrameworkDescription: RuntimeInformation.FrameworkDescription,
-            EnvironmentVersion: Environment.Version.ToString(),
-            OSArchitecture: RuntimeInformation.OSArchitecture.ToString(),
-            ProcessArchitecture: RuntimeInformation.ProcessArchitecture.ToString(),
-            RuntimeIdentifier: RuntimeInformation.RuntimeIdentifier,
-            RoslynVersion: typeof(CSharpCompilation).Assembly.GetName().Version?.ToString() ?? "unknown",
-            LanguageVersion: LanguageVersion.Latest.ToDisplayString());
-
-        return JsonSerializer.Serialize(info, RuntimeInfoJsonContext.Default.RuntimeInformationPayload);
+        var info = CodeDotNet.Engine.RuntimeInfo.GetRuntimeInformation();
+        return JsonSerializer.Serialize(info, CodeDotNetJsonContext.Default.RuntimeInformationPayload);
     }
-}
-
-internal sealed record RuntimeInformationPayload(
-    string FrameworkDescription,
-    string EnvironmentVersion,
-    string OSArchitecture,
-    string ProcessArchitecture,
-    string RuntimeIdentifier,
-    string RoslynVersion,
-    string LanguageVersion);
-
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-[JsonSerializable(typeof(RuntimeInformationPayload))]
-internal sealed partial class RuntimeInfoJsonContext : JsonSerializerContext
-{
 }
