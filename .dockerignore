@@ -1,0 +1,14 @@
+# Keeps the Docker build context (repo root, see codedotnet-sandbox/Dockerfile) small and
+# avoids leaking local build artifacts / dependencies into the image layers.
+
+**/node_modules
+**/bin
+**/obj
+**/dist
+codedotnet.web/public/dotnet-worker
+.git
+.github
+docs
+*.md
+.vs
+.vscode

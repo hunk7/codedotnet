@@ -720,6 +720,25 @@
   flex-shrink: 0;
 }
 
+.mcp-playground__hint {
+  width: 100%;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.mcp-playground__hint code {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+}
+
+.mcp-playground__hint--connecting {
+  color: var(--color-accent-run);
+}
+
 .mcp-playground__tools {
   background: var(--color-surface);
   border: 1px solid var(--color-border);

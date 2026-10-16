@@ -42,19 +42,25 @@ MCP-aware client (VS Code, Claude Desktop, or the browser) can call — reusing 
 disposable, hard-timeout-enforced child process.
 
 The **MCP Playground** tab in the web app is an in-browser client for this server over a
-WebSocket transport (`ws://127.0.0.1:7900` by default):
+WebSocket transport. The hosted [GitHub Pages site](https://hunk7.github.io/codedotnet/) defaults
+to a free, publicly-hosted instance at `wss://codedotnet-sandbox.onrender.com` (deployed on
+[Render](https://render.com)'s free tier — see
+[`docs/deployment-mcp-sandbox.md`](docs/deployment-mcp-sandbox.md)). Since it's a free-tier
+service, it sleeps after ~15 minutes of inactivity, so the first connection after idle time can
+take up to a minute to wake up; the UI surfaces a hint for this. You can switch the **MCP server
+URL** field to `ws://127.0.0.1:7900` to connect to a local sandbox instead (instant, no cold start):
 
 <img width="100%" alt="MCP Playground: connected to ws://127.0.0.1:7900, showing the discovered compile_and_run tool, a Singleton pattern C# sample in the editor, and the execution result pane with status, captured output, a nullable-reference warning, timing breakdown, and the raw JSON-RPC tools/call response" src="docs/images/MCP-Playground.png" />
 
 | | |
 | --- | --- |
-| 🔗 | Connect to any MCP WebSocket endpoint (defaults to the local sandbox) and see its **Connected**/**Disconnected** status live. |
+| 🔗 | Connect to any MCP WebSocket endpoint (defaults to the public Render-hosted sandbox) and see its **Connected**/**Disconnected** status live. |
 | 🧰 | **Discovered tools** panel lists every tool the server advertises via `tools/list`, with its description. |
 | 📝 | Edit a single-file C# program in the same Monaco-powered editor used by the main playground. |
 | ▶️ | **Call compile_and_run** invokes the tool over JSON-RPC 2.0 and renders the parsed result: status (e.g. `ExecutionCompleted`, `ExecutionCompletedWithWarnings`), captured stdout, diagnostics/warnings with file/line/column, and a `build / run / total` timing breakdown. |
 | 🔍 | A collapsible **Raw JSON-RPC tools/call response** section shows the exact wire payload for debugging or integrating your own MCP client. |
 
-To try it locally:
+To try it locally (against your own sandbox instance, instead of the public Render deployment):
 
 ```powershell
 # Terminal 1: start the MCP WebSocket server (ws://127.0.0.1:7900)
@@ -68,10 +74,12 @@ npm install
 npm run dev
 ```
 
-Open the printed dev server URL, switch to the **MCP Playground** tab, click **Connect**, and
-run the sample program. See
+Open the printed dev server URL, switch to the **MCP Playground** tab, change the **MCP server
+URL** field to `ws://127.0.0.1:7900`, click **Connect**, and run the sample program. See
 [`codedotnet-sandbox/README.md`](codedotnet-sandbox/README.md) for the stdio transport, worker-pool
-isolation model, and instructions for registering the server with VS Code or Claude Desktop.
+isolation model, and instructions for registering the server with VS Code or Claude Desktop. See
+[`docs/deployment-mcp-sandbox.md`](docs/deployment-mcp-sandbox.md) for how the public Render
+instance is deployed and operated.
 
 ## 🚦 Quick start
 

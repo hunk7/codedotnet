@@ -5,7 +5,12 @@ import { McpClient, type McpConnectionState, type McpTool } from './mcpClient'
 import type { CompileAndRunResponsePayload } from '../workers/protocol'
 import { PlayIcon } from '../components/icons'
 
-const DEFAULT_MCP_URL = 'ws://127.0.0.1:7900'
+// Public free-tier demo instance (see render.yaml / docs/deployment-mcp-sandbox.md). Render's
+// free plan sleeps the service after ~15 minutes of inactivity, so the first connection after
+// a period of idleness can take up to a minute to wake the container before the handshake
+// succeeds - see the hint rendered near the URL field below. Override the URL field to point
+// at a locally running `npm run serve` instance (ws://127.0.0.1:7900) for local development.
+const DEFAULT_MCP_URL = 'wss://codedotnet-sandbox.onrender.com'
 
 const SAMPLE_SOURCE = `using System;
 
@@ -106,6 +111,20 @@ function McpPlayground() {
           disabled={isConnected || isConnecting}
           spellCheck={false}
         />
+        {!isConnected && !isConnecting && (
+          <span className="mcp-playground__hint">
+            Defaults to a free, auto-sleeping public demo instance — the first connection after a
+            period of inactivity can take up to a minute to wake it. For instant local
+            development, run <code>npm run serve</code> in <code>codedotnet-sandbox/</code> and
+            change this to <code>ws://127.0.0.1:7900</code>.
+          </span>
+        )}
+        {isConnecting && (
+          <span className="mcp-playground__hint mcp-playground__hint--connecting">
+            Connecting… if this is the public demo instance waking from sleep, this can take up
+            to a minute.
+          </span>
+        )}
         {isConnected ? (
           <button type="button" className="toolbar-button toolbar-button--stop" onClick={handleDisconnect}>
             Disconnect

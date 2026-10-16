@@ -1,0 +1,49 @@
+# Render Blueprint for the codedotnet-sandbox MCP WebSocket server.
+#
+# This deploys codedotnet-sandbox/src/wsServer.mjs (the browser-facing WebSocket transport
+# for the same compile_and_run tool exposed over stdio by src/server.mjs) as a free-tier,
+# always-public backend for the MCP Playground tab in the codedotnet.web GitHub Pages site.
+#
+# No changes to the sandbox's dispatch/isolation logic: mcpCore.mjs, workerPool.mjs, and
+# worker.mjs are used exactly as committed. See codedotnet-sandbox/Dockerfile for why a
+# custom Docker image (rather than Render's native Node build) is required: worker.mjs needs
+# the CodeDotNet.Engine browser-wasm artifact published via the .NET 10 SDK before the Node
+# process can start, and Render's native Node build image has no .NET SDK available.
+#
+# IMPORTANT - this file alone does not provision anything. To deploy:
+#   1. In the Render dashboard: New -> Blueprint -> connect this GitHub repo.
+#   2. Render detects this render.yaml and proposes the "codedotnet-sandbox" service below.
+#   3. Set MCP_ALLOWED_ORIGIN in the Render dashboard's environment variables (NOT here, so
+#      it can be rotated - e.g. if the Pages URL/custom domain changes - without a code change
+#      or redeploy of this file). Start with "*" for initial smoke testing, then tighten to
+#      the exact Pages origin (e.g. https://hunk7.github.io) before treating this as "live".
+#   4. Apply the blueprint; Render builds the Dockerfile and deploys.
+#
+# See docs/deployment-mcp-sandbox.md for the full deployment runbook, free-tier caveats
+# (cold start / sleep-after-15-min-idle, single-instance concurrency ceiling, memory limits),
+# and rollback instructions.
+
+services:
+  - type: web
+    name: codedotnet-sandbox
+    runtime: docker
+    repo: https://github.com/hunk7/codedotnet
+    plan: free
+    region: oregon
+    branch: main
+    dockerfilePath: ./codedotnet-sandbox/Dockerfile
+    dockerContext: .
+    # No healthCheckPath: wsServer.mjs only speaks the WebSocket upgrade handshake, not
+    # plain HTTP GET, so an HTTP health-check path would report false negatives and cause
+    # Render to restart-loop a healthy service. Render falls back to checking that the
+    # service's TCP port accepts connections, which is sufficient here.
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: NODE_ENV
+        value: production
+      # MCP_ALLOWED_ORIGIN is intentionally NOT set here - configure it in the Render
+      # dashboard so it can be rotated without editing this file. Leaving it unset means
+      # wsServer.mjs's isOriginAllowed() permits any origin, which is only acceptable for
+      # initial smoke testing (see docs/deployment-mcp-sandbox.md Step: Tighten origin).
+    autoDeploy: true
