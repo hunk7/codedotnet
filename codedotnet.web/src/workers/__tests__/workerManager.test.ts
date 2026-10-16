@@ -178,7 +178,11 @@ describe('WorkerManager compileAndRun timeout handle cleanup', () => {
     await vi.runAllTimersAsync()
     await initializePromise
 
-    const runPromise = manager.compileAndRun('Console.WriteLine(1);', '', DEFAULT_EXECUTION_TIMEOUT_MS)
+    const runPromise = manager.compileAndRun(
+      'Console.WriteLine(1);',
+      '',
+      DEFAULT_EXECUTION_TIMEOUT_MS,
+    )
     await vi.runAllTimersAsync()
     await runPromise
 

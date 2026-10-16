@@ -76,7 +76,10 @@ function McpPlayground() {
     setRawResponse('')
 
     try {
-      const callResult = await client.callTool('compile_and_run', { source: snapshot, timeoutMs: 10000 })
+      const callResult = await client.callTool('compile_and_run', {
+        source: snapshot,
+        timeoutMs: 10000,
+      })
       const text = callResult.content[0]?.text ?? '{}'
       setRawResponse(text)
       setResult(JSON.parse(text) as CompileAndRunResponsePayload)
@@ -107,7 +110,11 @@ function McpPlayground() {
           spellCheck={false}
         />
         {isConnected ? (
-          <button type="button" className="toolbar-button toolbar-button--stop" onClick={handleDisconnect}>
+          <button
+            type="button"
+            className="toolbar-button toolbar-button--stop"
+            onClick={handleDisconnect}
+          >
             Disconnect
           </button>
         ) : (
@@ -120,7 +127,9 @@ function McpPlayground() {
             {isConnecting ? 'Connecting…' : 'Connect'}
           </button>
         )}
-        <span className={`mcp-playground__status mcp-playground__status--${connectionState.toLowerCase()}`}>
+        <span
+          className={`mcp-playground__status mcp-playground__status--${connectionState.toLowerCase()}`}
+        >
           {connectionState}
         </span>
       </section>
@@ -168,7 +177,9 @@ function McpPlayground() {
 
       {result && (
         <section className="mcp-playground__result">
-          <div className={`mcp-playground__result-status${isToolError ? ' mcp-playground__result-status--error' : ''}`}>
+          <div
+            className={`mcp-playground__result-status${isToolError ? ' mcp-playground__result-status--error' : ''}`}
+          >
             {result.status}
           </div>
           <pre className="mcp-playground__output">{result.output || '(no output)'}</pre>
@@ -187,8 +198,8 @@ function McpPlayground() {
             </p>
           )}
           <p className="mcp-playground__timings">
-            build {result.compilationDurationMs.toFixed(0)}ms · run {result.executionDurationMs.toFixed(0)}ms · total{' '}
-            {result.totalDurationMs.toFixed(0)}ms
+            build {result.compilationDurationMs.toFixed(0)}ms · run{' '}
+            {result.executionDurationMs.toFixed(0)}ms · total {result.totalDurationMs.toFixed(0)}ms
           </p>
           <details className="mcp-playground__raw">
             <summary>Raw JSON-RPC tools/call response</summary>
