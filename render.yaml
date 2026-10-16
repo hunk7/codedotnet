@@ -30,7 +30,11 @@ services:
     repo: https://github.com/hunk7/codedotnet
     plan: free
     region: oregon
-    branch: main
+    # NOTE: codedotnet-sandbox/ only exists on this branch until it is merged into main.
+    # Update this to "main" (and re-sync the Blueprint) once the PR is merged, otherwise
+    # Render will clone main, which lacks codedotnet-sandbox/, and the Docker build will
+    # fail with "no such file or directory" for the sandbox COPY steps.
+    branch: codedotnet-mcp-hosting-platform
     dockerfilePath: ./codedotnet-sandbox/Dockerfile
     dockerContext: .
     # No healthCheckPath: wsServer.mjs only speaks the WebSocket upgrade handshake, not
