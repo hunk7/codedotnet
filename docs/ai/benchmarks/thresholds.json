@@ -1,0 +1,24 @@
+{
+  "_comment": "All limits are null until measured. A release gate must fail while any limit is null.",
+  "version": 1,
+  "profiles": {
+    "low-resource": {
+      "BM-01": { "maxLoadSeconds": null },
+      "BM-02": { "maxPeakRamBytes": null },
+      "BM-03": { "maxTtftMs": null },
+      "BM-04": { "minTokensPerSecond": null },
+      "BM-07": { "maxRetrievalMs": null },
+      "BM-10": { "minAgentSuccessRate": null },
+      "BM-12": { "maxUiLatencyMs": null }
+    },
+    "recommended": {
+      "BM-01": { "maxLoadSeconds": null },
+      "BM-02": { "maxPeakRamBytes": null },
+      "BM-03": { "maxTtftMs": null },
+      "BM-04": { "minTokensPerSecond": null },
+      "BM-07": { "maxRetrievalMs": null },
+      "BM-10": { "minAgentSuccessRate": null },
+      "BM-12": { "maxUiLatencyMs": null }
+    }
+  }
+}
