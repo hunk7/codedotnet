@@ -121,7 +121,7 @@ npm run build
 | --------------------------------- | ----------------------------------------------------------------------------------------- |
 | 🖥️ `codedotnet.web/`              | React + TypeScript + Vite frontend (editor, shell, worker manager, complexity estimator). |
 | ⚙️ `codedotnet.compiler/`         | .NET 10 `browser-wasm` project: Roslyn compile host, execution host, JS interop.          |
-| ✅ `codedotnet.compiler.tests/`   | xUnit tests for the compiler/execution host logic (linked source, runs natively).         |
+| ✅ `CodeDotNet.Engine.Tests/`       | xUnit tests for the shared engine (`CodeDotNet.Engine`), run natively.                    |
 | 🧰 `codedotnet-sandbox/`           | Node.js MCP server: stdio + WebSocket transports for a sandboxed `compile_and_run` tool. |
 | 🤖 `.github/workflows/deploy.yml` | CI validation + GitHub Pages deployment workflow.                                         |
 | 📦 `.github/dependabot.yml`       | Automated weekly dependency updates (npm, NuGet, GitHub Actions).                         |

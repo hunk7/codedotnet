@@ -5,8 +5,23 @@ updates:
     schedule:
       interval: "weekly"
 
+  - package-ecosystem: "npm"
+    directory: "/codedotnet-sandbox"
+    schedule:
+      interval: "weekly"
+
   - package-ecosystem: "nuget"
     directory: "/codedotnet.compiler"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "nuget"
+    directory: "/CodeDotNet.Engine"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "nuget"
+    directory: "/CodeDotNet.Engine.Tests"
     schedule:
       interval: "weekly"
 

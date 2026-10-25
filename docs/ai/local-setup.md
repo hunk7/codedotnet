@@ -1,6 +1,6 @@
 # Local Setup (Windows)
 
-Status: **Draft. Describes the proposed procedure; the scripts do not exist yet.** Commands marked [P] are proposed.
+Status: **Scripts exist under `scripts/dev/` (Phase 1). Verified locally without Ollama: prerequisite check, hardware probe, sandbox MCP probe, AI service health/auth/Origin. Not yet verified: end-to-end with a real Ollama model, `Start-CodeDotNet.ps1` full run, GPU mode.**
 
 ## Prerequisites
 
@@ -26,4 +26,4 @@ Set `gpuMode` to `off`. This is the baseline and requires nothing beyond Ollama.
 
 ## Optional Qdrant
 
-Off by default. Enabled with `-WithQdrant` [P], CPU mode only. Packaging on Windows is unverified.
+Off by default. Enabled with `-WithQdrant` [P, not implemented yet], CPU mode only. Packaging on Windows is unverified.

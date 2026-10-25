@@ -3,6 +3,8 @@
 // definitions and method handling in one place guarantees both transports expose
 // identical behavior for initialize/tools/list/tools/call/shutdown.
 
+import { DEFAULT_MAX_TIMEOUT_MS, clampTimeout } from './security.mjs'
+
 export const TOOLS = [
   {
     name: 'compile_and_run',
@@ -32,7 +34,7 @@ export const TOOLS = [
  * delivered to the client. Transport-agnostic: callers decide how `send` serializes
  * and frames each message (newline-delimited stdout, WebSocket text frame, etc).
  */
-export function createRequestHandler(pool, { onShutdown } = {}) {
+export function createRequestHandler(pool, { onShutdown, maxTimeoutMs = DEFAULT_MAX_TIMEOUT_MS } = {}) {
   function sendResult(send, id, result) {
     send({ jsonrpc: '2.0', id, result })
   }
@@ -77,7 +79,7 @@ export function createRequestHandler(pool, { onShutdown } = {}) {
           const response = await pool.compileAndRun({
             source: args.source,
             stdin: typeof args.stdin === 'string' ? args.stdin : '',
-            timeoutMs: typeof args.timeoutMs === 'number' ? args.timeoutMs : undefined,
+            timeoutMs: clampTimeout(args.timeoutMs, maxTimeoutMs),
           })
 
           sendResult(send, id, {

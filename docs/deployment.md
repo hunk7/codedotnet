@@ -17,7 +17,7 @@ Implements §18.1 PR validation:
 1. Checkout, set up .NET 10 and Node 22.
 2. `dotnet restore` + `dotnet build` for `codedotnet.compiler` (Release, browser-wasm).
 3. Discover and run any `.csproj` referencing `Microsoft.NET.Test.Sdk` via
-   `dotnet test -c Release` (currently `codedotnet.compiler.tests`; see
+   `dotnet test -c Release` (currently `CodeDotNet.Engine.Tests`; see
    [`docs/testing.md`](testing.md)).
 4. `npm ci` in `codedotnet.web`.
 5. `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test`.

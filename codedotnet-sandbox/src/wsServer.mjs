@@ -15,32 +15,43 @@
 import { WebSocketServer } from 'ws'
 import { WorkerPool } from './workerPool.mjs'
 import { createRequestHandler } from './mcpCore.mjs'
+import {
+  DEFAULT_MAX_PAYLOAD_BYTES,
+  DEFAULT_MAX_TIMEOUT_MS,
+  MAX_POOL_SIZE,
+  isOriginAllowed,
+  parseAllowedOrigins,
+  parsePositiveInt,
+} from './security.mjs'
 
 const PORT = Number(process.env.PORT ?? 7900)
 const HOST = process.env.HOST ?? '127.0.0.1'
-// By default only same-origin/local dev servers may connect. Set MCP_ALLOWED_ORIGIN to a
-// specific origin (or '*' to disable the check) when hosting the playground elsewhere.
-const ALLOWED_ORIGIN = process.env.MCP_ALLOWED_ORIGIN ?? null
+// Default-deny: browser clients may connect only from loopback origins (local dev servers).
+// Clients that send no Origin header (scripts, MCP hosts) are allowed. Set MCP_ALLOWED_ORIGIN
+// to a comma-separated list of exact origins (for example the hosted playground), or '*' to
+// explicitly disable the check.
+const ALLOWED_ORIGINS = parseAllowedOrigins(process.env.MCP_ALLOWED_ORIGIN)
+const POOL_SIZE = parsePositiveInt(process.env.MCP_POOL_SIZE, undefined, MAX_POOL_SIZE)
+const MAX_TIMEOUT_MS = parsePositiveInt(process.env.MCP_MAX_TIMEOUT_MS, DEFAULT_MAX_TIMEOUT_MS)
+const MAX_PAYLOAD_BYTES = parsePositiveInt(
+  process.env.MCP_MAX_PAYLOAD_BYTES,
+  DEFAULT_MAX_PAYLOAD_BYTES,
+)
 
-const pool = new WorkerPool()
+const pool = new WorkerPool(POOL_SIZE === undefined ? {} : { poolSize: POOL_SIZE })
 const handleRequest = createRequestHandler(pool, {
+  maxTimeoutMs: MAX_TIMEOUT_MS,
   onShutdown: () => {
     pool.close()
     process.exit(0)
   },
 })
 
-function isOriginAllowed(origin) {
-  if (ALLOWED_ORIGIN === '*' || ALLOWED_ORIGIN === null) {
-    return true
-  }
-  return origin === ALLOWED_ORIGIN
-}
-
 const wss = new WebSocketServer({
   host: HOST,
   port: PORT,
-  verifyClient: (info) => isOriginAllowed(info.origin),
+  maxPayload: MAX_PAYLOAD_BYTES,
+  verifyClient: (info) => isOriginAllowed(info.origin, ALLOWED_ORIGINS),
 })
 
 wss.on('connection', (ws) => {

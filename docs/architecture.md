@@ -77,9 +77,9 @@ Browser Main Thread
 - Full Playwright end-to-end coverage is intentionally deferred for v1 (see
   [`docs/security.md`](security.md) and project scope notes) in favor of Vitest/RTL component
   and unit coverage plus manual verification
-- `codedotnet.compiler.tests` (xUnit) exercises `CompilerHost` and `ExecutionHost` directly by
-  linking their source files, since the main `codedotnet.compiler` project targets
-  `browser-wasm` and cannot be referenced by a normal desktop test host
+- `CodeDotNet.Engine.Tests` (xUnit) exercises `CompilerHost` and `ExecutionHost` in
+  `CodeDotNet.Engine` natively, since the engine is a plain `net10.0` library while
+  `codedotnet.compiler` targets `browser-wasm` and cannot be referenced by a desktop test host
 
 ### CI/CD
 

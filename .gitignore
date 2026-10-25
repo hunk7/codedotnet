@@ -34,3 +34,6 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Local runtime state (logs, pids, hardware probe, AI data)
+.codedotnet/

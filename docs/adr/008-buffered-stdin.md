@@ -16,7 +16,7 @@ single buffered string, rather than providing a fully interactive terminal.
   mid-execution.
 - Predictable testing: execution behavior is deterministic given a fixed STDIN string, as
   demonstrated in
-  [`ExecutionHostTests.cs`](../../codedotnet.compiler.tests/ExecutionHostTests.cs).
+  ](../../CodeDotNet.Engine.Tests/ExecutionHostTests.cs)
 - Suitable for the primary use case — interview-style and algorithm-practice programs — which
   typically read a fixed set of inputs at the start of execution.
 - Avoids pretending to provide a fully interactive terminal experience that the architecture

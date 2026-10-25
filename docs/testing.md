@@ -31,21 +31,32 @@ Run all commands from the `codedotnet.web` directory.
   verifies that `stop()` terminates a hung worker (e.g. a user program stuck in an infinite loop)
   and rejects the in-flight request, and that `recover()` produces a fresh `Ready` worker.
 
-## .NET (`codedotnet.compiler` / `codedotnet.compiler.tests`)
+## .NET (`CodeDotNet.Engine` / `CodeDotNet.Engine.Tests`)
 
 Run from the repository root (or open `codedotnet.slnx` in Visual Studio and use Test Explorer).
 
 ```powershell
-dotnet test codedotnet.compiler.tests/codedotnet.compiler.tests.csproj
-dotnet test codedotnet.compiler.tests/codedotnet.compiler.tests.csproj -c Release
+dotnet test CodeDotNet.Engine.Tests/CodeDotNet.Engine.Tests.csproj
+dotnet test CodeDotNet.Engine.Tests/CodeDotNet.Engine.Tests.csproj -c Release
 ```
 
-`codedotnet.compiler.tests` is a normal (non-browser-wasm) `net10.0` xUnit project that links
-`CompilerHost.cs` and `ExecutionHost.cs` directly from `codedotnet.compiler`, because the main
-project targets `RuntimeIdentifier=browser-wasm` and cannot be referenced by a desktop test host.
-This lets the compiler/execution logic run natively and quickly under a normal test runner and
-CI, while the actual browser-wasm worker build is still verified separately via the frontend
-build and manual/CI smoke checks.
+`CodeDotNet.Engine.Tests` is a normal `net10.0` xUnit project that references `CodeDotNet.Engine`
+and `CodeDotNet.Contracts` directly. The engine is a plain `net10.0` library (not `browser-wasm`),
+so the compiler/execution logic runs natively and quickly under a normal test runner and CI,
+while the actual browser-wasm worker build is verified separately via the frontend build and
+manual/CI smoke checks.
+
+## Sandbox (`codedotnet-sandbox`)
+
+```powershell
+cd codedotnet-sandbox
+npm ci
+npm test
+```
+
+`npm test` runs `node --test test/*.test.mjs`. The end-to-end tests need the published wasm worker
+assets (`npm run build:worker` in `codedotnet.web`); `test/security.test.mjs` does not. CI publishes
+the worker assets and runs these tests in the validation job.
 
 ### What the .NET test suite covers
 
@@ -71,6 +82,6 @@ build and manual/CI smoke checks.
 The [`deploy.yml`](../.github/workflows/deploy.yml) workflow's validation job runs the equivalent
 of the commands above (Node and .NET restore, typecheck, lint, format check, frontend tests,
 .NET tests, production build, and artifact-size checks) on every pull request, and repeats them
-before deploying `main` to GitHub Pages. Because `codedotnet.compiler.tests` references
+before deploying `main` to GitHub Pages. Because `CodeDotNet.Engine.Tests` references
 `Microsoft.NET.Test.Sdk`, the workflow's existing `dotnet test` discovery step picks it up
-automatically without any workflow changes.
+automatically. The sandbox tests run in the same job after the worker assets are published.

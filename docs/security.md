@@ -22,7 +22,7 @@ default-src 'self';
 script-src 'self' 'wasm-unsafe-eval';
 style-src 'self' 'unsafe-inline';
 worker-src 'self' blob:;
-connect-src 'self';
+connect-src 'self' ws://127.0.0.1:* ws://localhost:*;
 img-src 'self' data:;
 font-src 'self' data:;
 object-src 'none';
@@ -47,9 +47,7 @@ Rationale for each directive:
 - **worker-src 'self' blob:** — The compiler pipeline runs inside a dedicated Web Worker loaded
   from the same origin. `blob:` is included because Vite's worker bundling can produce a
   worker script wrapped in a Blob URL in some build configurations.
-- **connect-src 'self'** — The app never calls external network APIs; all compilation and
-  execution happen locally in-browser via the worker and WebAssembly runtime, so only
-  same-origin `fetch`/XHR (e.g. loading `dotnet.wasm` assets) is permitted.
+- **connect-src 'self' ws://127.0.0.1:* ws://localhost:*** — The app calls no external network APIs. Compilation and execution happen locally in the browser via the worker and WebAssembly runtime, so same-origin `fetch`/XHR (e.g. loading `dotnet.wasm` assets) is permitted. The loopback `ws://` entries exist only for the MCP Playground, which connects to the local `codedotnet-sandbox` WebSocket server. The sandbox denies non-loopback browser Origins by default (see `codedotnet-sandbox/src/security.mjs`).
 - **img-src 'self' data:** — Favicon and any inline data-URI icons are same-origin or `data:`.
 - **font-src 'self' data:** — No external font CDNs are used.
 - **object-src 'none'** — No Flash/plugin content is used; fully disabled per CSP best practice.

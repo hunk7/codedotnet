@@ -35,7 +35,11 @@ export interface CompileAndRunRequestPayload {
 }
 
 export type ExecutionStatus =
-  'BuildFailed' | 'ExecutionCompleted' | 'ExecutionCompletedWithWarnings' | 'ExecutionFailed'
+  | 'BuildFailed'
+  | 'ExecutionCompleted'
+  | 'ExecutionCompletedWithWarnings'
+  | 'ExecutionFailed'
+  | 'TimedOut'
 
 export interface DiagnosticPayload {
   id: string

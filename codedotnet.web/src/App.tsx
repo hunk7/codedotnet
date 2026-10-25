@@ -308,7 +308,7 @@ function App() {
         })
       }
 
-      setBuildStatus(result.status)
+      setBuildStatus(result.status === 'TimedOut' ? 'ExecutionTimedOut' : result.status)
     } catch (err) {
       const message = (err as Error).message
       if (message === 'Execution timed out') {

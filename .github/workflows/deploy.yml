@@ -89,6 +89,18 @@ jobs:
         working-directory: codedotnet.web
         run: npm test
 
+      - name: Publish worker assets for sandbox tests
+        working-directory: codedotnet.web
+        run: npm run build:worker:release
+
+      - name: Install sandbox dependencies
+        working-directory: codedotnet-sandbox
+        run: npm ci
+
+      - name: Sandbox tests
+        working-directory: codedotnet-sandbox
+        run: npm test
+
       - name: Production build (root base path)
         working-directory: codedotnet.web
         run: npm run build
