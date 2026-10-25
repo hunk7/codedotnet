@@ -113,5 +113,5 @@ Write-Host 'CodeDotNet is up.'
 Write-Host '  Sandbox : ws://127.0.0.1:7900'
 Write-Host '  AI      : http://127.0.0.1:7901/v1'
 if (-not $NoFrontend) { Write-Host '  Frontend: http://localhost:5173' }
-if ($code) { Write-Host "  Pairing code: $code (expires after 10 minutes)" }
+if ($code) { Write-Host "  Pairing code: $code (expires after 30 minutes; a new one is logged after each use)" }
 Write-Host 'Stop with scripts/dev/Stop-CodeDotNet.ps1. Check with scripts/dev/Test-CodeDotNetHealth.ps1.'

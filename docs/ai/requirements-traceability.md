@@ -1,6 +1,6 @@
 # Requirements Traceability
 
-Status: Proposed. "Phase" refers to the master plan section 25. Tests are planned, not existing.
+Status: Phases 0-8 are implemented. "Phase" refers to the master plan section 25. Verification rows name the planned check; the automated ones exist in `CodeDotNet.Ai.Tests`, `codedotnet.web/src/ai/__tests__` and the sandbox tests. Items needing a real Ollama, live Qdrant, GPU, real browsers or benchmark runs (AC-HW-*, BM-*, NFR-PERF-001 thresholds) are **not verified**. FR-KB-002 (Qdrant) is verified against an in-memory fake only.
 
 | ID | Requirement | Phase | ADR | Planned verification |
 |---|---|---|---|---|

@@ -1,6 +1,6 @@
 # CodeDotNet Local-First AI: Master Implementation Plan
 
-Status: **Proposed. Documentation only. No AI phase is implemented or approved for implementation.**
+Status: **Phases 0-8 implemented; validated offline only (see [`plan-validation-report.md`](plan-validation-report.md)). Benchmarks and real-model, live-Qdrant, GPU and browser checks are outstanding.**
 Branch: `codedotnet-mcp-platform`.
 Evidence labels: **[V]** verified in source, **[P]** proposed, **[A]** assumption, **[R]** risk, **[D]** decision, **[Q]** open question.
 

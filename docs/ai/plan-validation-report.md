@@ -1,5 +1,28 @@
 # Plan Validation Report
 
+## 0. Final validation (Phases 0-8, release candidate)
+
+Run on Windows, .NET SDK 10, branch `codedotnet-mcp-platform`.
+
+| Command | Result |
+|---|---|
+| `dotnet build codedotnet.slnx -c Release` | **Pass**: 0 warnings, 0 errors |
+| `CodeDotNet.Ai.Tests` | **Pass**: 246 |
+| `CodeDotNet.Engine.Tests` | **Pass**: 20 |
+| `codedotnet-sandbox` `npm test` | **Pass**: 18 |
+| `codedotnet.web` `npm test` | **Pass**: 66 (31 in `src/ai`) |
+| `codedotnet.web` typecheck, format:check, build | **Pass** |
+| `codedotnet.web` lint | **Pass**: 0 errors, 2 pre-existing warnings |
+| `Publish-CodeDotNetAi.ps1` and smoke run of the published build | **Pass**: loopback bind, 401 without token, health `unavailable` with no Ollama |
+| `CodeDotNet.Ai gate` | Exit 1 **by design**: threshold limits are null until benchmarks exist |
+| `CodeDotNet.Ai eval` | Exit 0, lexical-only (no Ollama): recall@5 1.000, MRR 1.000 on the 6-case seed set. Printed, not a benchmark result |
+
+**Not run / not verified:** a real Ollama model (chat, embeddings, citations quality); a live Qdrant (Docker daemon was not running; the live test is gated on `CODEDOTNET_QDRANT_URL`); GPU mode; HTTPS-hosted page to HTTP loopback in real browsers; end-to-end `Start-CodeDotNet.ps1`; benchmarks BM-01..BM-12. No performance or quality claim is made.
+
+---
+
+# Original documentation-PR validation (historical)
+
 Scope: documentation-only PR on branch `codedotnet-mcp-platform`. Results below come from commands run during this PR. Anything not listed was **not run**.
 
 ## 1. Commands run

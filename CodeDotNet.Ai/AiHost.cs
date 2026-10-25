@@ -35,12 +35,30 @@ public static class AiApp
 
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddSingleton<PairingService>();
+        builder.Services.AddHostedService<PairingRotationService>();
         builder.Services.AddSingleton<IHardwareProbe, HardwareProbe>();
         builder.Services.AddSingleton<IProfileResolver, ProfileResolver>();
         builder.Services.AddSingleton<IResourceGovernor, ResourceGovernor>();
         builder.Services.AddSingleton<KbDatabase>();
         builder.Services.AddSingleton<IChunkRepository, SqliteChunkRepository>();
-        builder.Services.AddSingleton<IVectorStore, SqliteVectorStore>();
+        options.ValidateVectorStore();
+        if (options.UseQdrant)
+        {
+            builder.Services.AddHttpClient<QdrantVectorStore>(client =>
+            {
+                client.BaseAddress = new Uri(options.QdrantUrl.TrimEnd('/') + "/");
+                client.Timeout = TimeSpan.FromSeconds(options.RequestTimeoutSeconds);
+                if (!string.IsNullOrEmpty(options.QdrantApiKey))
+                {
+                    client.DefaultRequestHeaders.Add("api-key", options.QdrantApiKey);
+                }
+            });
+            builder.Services.AddSingleton<IVectorStore>(sp => sp.GetRequiredService<QdrantVectorStore>());
+        }
+        else
+        {
+            builder.Services.AddSingleton<IVectorStore, SqliteVectorStore>();
+        }
         builder.Services.AddSingleton<KnowledgeService>();
         builder.Services.AddSingleton<AskService>();
         builder.Services.AddSingleton<ISandboxClient, WebSocketSandboxClient>();
@@ -87,10 +105,22 @@ public static class AiApp
     {
         var v1 = app.MapGroup("/v1");
 
-        v1.MapGet("/health", async (IChatProvider chat, ResourceProfile profile, CancellationToken ct) =>
+        v1.MapGet("/health", async (IChatProvider chat, IVectorStore vectorStore, ResourceProfile profile, CancellationToken ct) =>
         {
             var caps = await chat.GetCapabilitiesAsync(ct);
             var checks = new List<HealthCheck> { new("service", "ok") };
+
+            if (vectorStore is QdrantVectorStore qdrant)
+            {
+                try
+                {
+                    checks.Add(new("qdrant", "ok", await qdrant.PingAsync(ct)));
+                }
+                catch (HttpRequestException ex)
+                {
+                    checks.Add(new("qdrant", "degraded", "unreachable; retrieval falls back to lexical search (" + ex.Message + ")"));
+                }
+            }
 
             if (!caps.Reachable)
             {
@@ -108,7 +138,7 @@ public static class AiApp
             }
 
             var status = checks.Any(c => c.Status == "unavailable") ? "unavailable"
-                : checks.Any(c => c.Status == "missing") ? "degraded"
+                : checks.Any(c => c.Status is "missing" or "degraded") ? "degraded"
                 : "ok";
             return Results.Ok(new { status, checks });
         });
@@ -122,8 +152,8 @@ public static class AiApp
             }
 
             return result.CodeExpiredOrLocked
-                ? ApiErrors.Error(StatusCodes.Status403Forbidden, "pairing_code_expired", "Pairing code expired or locked. Use the new code printed by the service.")
-                : ApiErrors.Error(StatusCodes.Status401Unauthorized, "pairing_failed", "Invalid pairing code.");
+                ? ApiErrors.Error(StatusCodes.Status403Forbidden, "pairing_code_expired", "Pairing code expired or locked. Use the newest code printed by the service.")
+                : ApiErrors.Error(StatusCodes.Status401Unauthorized, "pairing_failed", "Invalid pairing code. Codes are single-use; enter the newest code printed by the service.");
         });
 
         v1.MapGet("/status", async (IChatProvider chat, ResourceProfile profile, AiOptions options, CancellationToken ct) =>

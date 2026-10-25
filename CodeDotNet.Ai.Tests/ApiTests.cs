@@ -126,7 +126,8 @@ public class ApiSecurityTests
         using var client = server.CreateClient();
         var code = server.Pairing.CurrentCode;
         Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/v1/pair", new { code })).StatusCode);
-        Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsJsonAsync("/v1/pair", new { code })).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/v1/pair", new { code })).StatusCode);
+        Assert.NotEqual(code, server.Pairing.CurrentCode);
     }
 
     [Fact]
@@ -349,6 +350,58 @@ public class PairingServiceTests
         var svc = Create(new FakeTime());
         var result = svc.TryPair("  " + svc.CurrentCode.ToLowerInvariant() + " ");
         Assert.True(result.Success);
+    }
+
+    [Fact]
+    public void CodeLifetime_IsAtLeastThirtyMinutes()
+    {
+        Assert.True(PairingService.CodeLifetime >= TimeSpan.FromMinutes(30));
+    }
+
+    [Fact]
+    public void Code_IsStillValidJustBeforeLifetimeEnds()
+    {
+        var time = new FakeTime();
+        var svc = Create(time);
+        var code = svc.CurrentCode;
+        time.Advance(TimeSpan.FromMinutes(29));
+        Assert.True(svc.TryPair(code).Success);
+    }
+
+    [Fact]
+    public void Code_ChangesAfterSuccessfulPairing()
+    {
+        var svc = Create(new FakeTime());
+        var first = svc.CurrentCode;
+        Assert.True(svc.TryPair(first).Success);
+        var second = svc.CurrentCode;
+        Assert.NotEqual(first, second);
+        Assert.False(svc.TryPair(first).Success);
+        Assert.True(svc.TryPair(second).Success);
+    }
+
+    [Fact]
+    public void RotateIfExpired_OnlyRotatesAfterExpiry()
+    {
+        var time = new FakeTime();
+        var svc = Create(time);
+        var code = svc.CurrentCode;
+        Assert.False(svc.RotateIfExpired());
+        Assert.Equal(code, svc.CurrentCode);
+
+        time.Advance(PairingService.CodeLifetime + TimeSpan.FromSeconds(1));
+        Assert.True(svc.RotateIfExpired());
+        Assert.NotEqual(code, svc.CurrentCode);
+        Assert.False(svc.TryPair(code).Success);
+    }
+
+    [Fact]
+    public void Token_SurvivesCodeRotation()
+    {
+        var svc = Create(new FakeTime());
+        var result = svc.TryPair(svc.CurrentCode);
+        svc.Rotate("test");
+        Assert.True(svc.ValidateToken(result.Token));
     }
 
     [Fact]

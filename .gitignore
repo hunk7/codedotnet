@@ -37,3 +37,6 @@ Thumbs.db
 
 # Local runtime state (logs, pids, hardware probe, AI data)
 .codedotnet/
+
+# Published AI service build
+artifacts/

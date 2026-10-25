@@ -1,0 +1,138 @@
+.ai-host {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+}
+
+.ai-host[hidden] {
+  display: none;
+}
+
+.ai-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem 1rem;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  color: var(--color-text-primary);
+}
+
+.ai-panel__code-input {
+  flex: 0 1 160px;
+  min-width: 120px;
+}
+
+.ai-panel__health {
+  padding: 0.4rem 0.75rem;
+}
+
+.ai-panel__health summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.ai-panel__context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.ai-panel__context-info,
+.ai-panel__context-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  font-size: 0.85rem;
+}
+
+.ai-panel__grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 2fr) minmax(0, 3fr);
+  gap: 0.75rem;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.ai-panel__composer,
+.ai-panel__result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  min-height: 0;
+  padding: 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.ai-panel__question {
+  flex: 0 0 auto;
+  width: 100%;
+  height: 9rem;
+  min-height: 5rem;
+  max-height: 40vh;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.ai-panel__option {
+  font-size: 0.85rem;
+}
+
+.ai-panel__result {
+  overflow-y: auto;
+}
+
+.ai-panel__result-heading {
+  font-weight: 600;
+  color: var(--color-accent-run);
+}
+
+.ai-panel__answer {
+  max-height: none;
+  flex: 1 1 auto;
+  min-height: 6rem;
+}
+
+@media (max-width: 900px) {
+  .ai-panel__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ai-panel__result {
+    order: -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .ai-panel {
+    padding: 0.6rem 0.75rem 1rem;
+  }
+
+  .ai-panel .mcp-playground__connection {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ai-panel .toolbar-button {
+    justify-content: center;
+  }
+}

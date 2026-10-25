@@ -1,6 +1,6 @@
 # CodeDotNet AI Documentation
 
-Status: **Proposed. Documentation only. Nothing here is implemented.**
+Status: **Phases 0-8 implemented and validated offline. Not validated with a real Ollama model, a live Qdrant, a GPU, real browsers over HTTPS, or benchmark runs. See [`plan-validation-report.md`](plan-validation-report.md).**
 
 | Document | Purpose | Status |
 |---|---|---|
@@ -13,7 +13,7 @@ Status: **Proposed. Documentation only. Nothing here is implemented.**
 | [`local-setup.md`](local-setup.md) | Windows installation steps | Draft |
 | [`operations.md`](operations.md) | Start/stop/health/backup runbook | Draft |
 | [`troubleshooting.md`](troubleshooting.md) | Windows troubleshooting | Draft |
-| `ai-srs.md`, `architecture.md`, `rag-design.md`, `agent-design.md`, `data-governance.md`, `threat-model.md`, `evaluation.md`, `api.md`, `model-governance.md` | Outline stubs | Stub |
+| `ai-srs.md`, `architecture.md`, `rag-design.md`, `agent-design.md`, `data-governance.md`, `threat-model.md`, `evaluation.md`, `api.md`, `model-governance.md` | Describe the implemented system | Current |
 
 Context: [`../context/project-overview.md`](../context/project-overview.md). Decisions: [`../adr/`](../adr/README.md) 009-015.
 

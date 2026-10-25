@@ -13,7 +13,7 @@ public sealed class PairingService(TimeProvider time, ILogger<PairingService> lo
 {
     public const int MaxFailedAttempts = 5;
     public const int MaxSessions = 16;
-    public static readonly TimeSpan CodeLifetime = TimeSpan.FromMinutes(10);
+    public static readonly TimeSpan CodeLifetime = TimeSpan.FromMinutes(30);
     public static readonly TimeSpan SessionLifetime = TimeSpan.FromHours(8);
 
     private const string Alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -52,6 +52,22 @@ public sealed class PairingService(TimeProvider time, ILogger<PairingService> lo
         }
     }
 
+    /// <summary>Issues and logs a fresh code when the active one has expired. Returns true when it rotated.</summary>
+    public bool RotateIfExpired()
+    {
+        lock (_lock)
+        {
+            if (_code is not null && time.GetUtcNow() < _codeExpires)
+            {
+                return false;
+            }
+
+            GenerateCode();
+            logger.LogWarning("Pairing code expired. New code: {Code}", _code);
+            return true;
+        }
+    }
+
     public PairResult TryPair(string? candidate)
     {
         lock (_lock)
@@ -81,15 +97,17 @@ public sealed class PairingService(TimeProvider time, ILogger<PairingService> lo
                 if (_failures >= MaxFailedAttempts)
                 {
                     GenerateCode();
-                    logger.LogWarning("Too many failed pairing attempts. New code: {Code}", _code);
+                    logger.LogWarning("Pairing code locked after too many failed attempts. New code: {Code}", _code);
                     return new PairResult(false, null, null, true);
                 }
 
                 return new PairResult(false, null, null, false);
             }
 
-            _code = null;
-            _failures = 0;
+            // The code is single-use: issue (and log) the next one straight away so the console always
+            // shows a code that works, instead of leaving the service with no usable code.
+            GenerateCode();
+            logger.LogWarning("Pairing code used. Next pairing code: {Code}", _code);
 
             PurgeExpired(now);
             while (_sessions.Count >= MaxSessions)
