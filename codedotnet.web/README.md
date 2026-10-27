@@ -8,7 +8,7 @@ The React + TypeScript + Vite frontend for **codedotnet**. It hosts three tabs:
 | **MCP Playground** | `codedotnet-sandbox` on `ws://127.0.0.1:7900`            | Browser client for the Model Context Protocol server: discovers tools, calls `compile_and_run`, shows the parsed and raw JSON-RPC results. |
 | **AI (local)**     | `CodeDotNet.Ai` on `http://127.0.0.1:7901/v1` and Ollama | Pair with the local AI service, then review, debug, generate tests and ask questions about your code.                                      |
 
-🎬 See the [demo video](../docs/images/codenet.mp4) and the [root README](../README.md) for the
+🎬 See the [demo](../docs/images/demo.gif) and the [root README](../README.md) for the
 full walkthrough and the complete local setup. Architecture, testing, deployment, security and
 privacy docs live in [`docs/`](../docs/).
 

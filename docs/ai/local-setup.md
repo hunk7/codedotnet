@@ -1,6 +1,6 @@
 # Local Setup (Windows)
 
-See the [full local stack guide](../local-stack.md) for the shortest path and the [demo video](../images/codenet.mp4) for a walkthrough of the running stack.
+See the [full local stack guide](../local-stack.md) for the shortest path and the [demo](../images/demo.gif) for a walkthrough of the running stack.
 
 Status: **Scripts exist under `scripts/dev/`. The full stack (sandbox, AI service, frontend, Ollama, pairing, review, debug, test generation and Ask) has been run end to end locally. Not yet verified: GPU mode, a live Qdrant and published benchmarks.**
 

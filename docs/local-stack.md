@@ -1,7 +1,7 @@
 # 🏗️ Build the full local stack
 
 Follow this guide to reproduce the whole system, including the MCP sandbox and the local AI
-assistant shown in the [demo video](images/codenet.mp4), on your own machine. Windows with
+assistant shown in the [demo](images/demo.gif), on your own machine. Windows with
 PowerShell is the primary, tested path. The services themselves are cross-platform, but the helper
 scripts are PowerShell.
 

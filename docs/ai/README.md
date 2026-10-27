@@ -1,6 +1,6 @@
 # CodeDotNet AI Documentation
 
-Start with the [root README](../../README.md) for setup and the [demo video](../images/codenet.mp4) for a walkthrough.
+Start with the [root README](../../README.md) for setup and the [demo](../images/demo.gif) for a walkthrough.
 
 Status: **Phases 0-8 implemented. The full local stack (Ollama chat, pairing, review, debug, test generation, Ask, MCP sandbox) has been run end to end on a developer machine and is covered by automated tests. Not validated: GPU mode, a live Qdrant, real browsers over HTTPS, and benchmark runs. See [`plan-validation-report.md`](plan-validation-report.md).**
 

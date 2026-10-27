@@ -353,12 +353,9 @@ More: [`docs/ai/troubleshooting.md`](docs/ai/troubleshooting.md).
 A full walkthrough of the running application: the editor, the MCP Playground and the local AI
 assistant (pairing, review, debug, test generation and questions about your code).
 
-<video src="docs/images/codenet.mp4" controls muted width="100%"></video>
-
-> If the player does not appear in your viewer, open the video directly:
-> **[docs/images/codenet.mp4](docs/images/codenet.mp4)** (about 34 MB).
-
----
+<p align="center">
+  <img src="docs/images/demo.gif" alt="codedotnet demo: the editor, the MCP Playground and the local AI assistant" width="100%" />
+</p>
 
 ## 📜 License
 

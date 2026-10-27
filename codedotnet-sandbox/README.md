@@ -7,7 +7,7 @@ It is used by three consumers: external MCP clients (VS Code, Claude Desktop, Cu
 the **MCP Playground** tab in `codedotnet.web`, and the local AI service (`CodeDotNet.Ai`), which
 uses it to run code for the **Debug** and **Generate tests** workflows. See the
 [root README](../README.md) for the full local setup and the
-[demo video](../docs/images/codenet.mp4).
+[demo](../docs/images/demo.gif).
 
 ## Prerequisites
 
