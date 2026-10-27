@@ -19,6 +19,8 @@ import SettingsPanel from './components/SettingsPanel'
 import AboutDialog from './components/AboutDialog'
 import ErrorBoundary from './components/ErrorBoundary'
 import McpPlayground from './mcp/McpPlayground'
+import AiPanel from './ai/AiPanel'
+import type { AiLastRun } from './ai/workspaceContext'
 import { diagnosticsToMarkers } from './diagnostics'
 import { estimateComplexity, type ComplexityEstimate } from './complexity'
 import {
@@ -100,10 +102,13 @@ function App() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [saveState, setSaveState] = useState<'saved' | 'pending' | 'unavailable'>('saved')
   const [hasBootstrapped, setHasBootstrapped] = useState(false)
-  const [activeView, setActiveView] = useState<'editor' | 'mcp'>('editor')
+  const [activeView, setActiveView] = useState<'editor' | 'mcp' | 'ai'>('editor')
+  // The AI tab stays mounted after its first visit: its pairing token lives in memory only, so
+  // unmounting it on every tab switch would force a re-pair each time.
+  const [aiMounted, setAiMounted] = useState(false)
+  if (activeView === 'ai' && !aiMounted) setAiMounted(true)
 
   const [source, setSource] = useState(() => loadSource())
-  const stdin = ''
 
   const [buildStatus, setBuildStatus] = useState<BuildStatus>('Idle')
   const [diagnostics, setDiagnostics] = useState<DiagnosticPayload[]>([])
@@ -120,6 +125,7 @@ function App() {
     total: number
   } | null>(null)
   const [complexity, setComplexity] = useState<ComplexityEstimate | null>(null)
+  const [mcpRun, setMcpRun] = useState<AiLastRun | null>(null)
   const [runtimeInfo, setRuntimeInfo] = useState<RuntimeInformation | null>(null)
   const [aboutOpen, setAboutOpen] = useState(false)
 
@@ -270,6 +276,32 @@ function App() {
     setSaveState('saved')
   }, [])
 
+  const handleMcpRunComplete = useCallback((result: CompileAndRunResponsePayload) => {
+    setMcpRun({
+      origin: 'mcp',
+      status: result.status,
+      output: result.output,
+      exceptionType: result.exceptionType,
+      exceptionMessage: result.exceptionMessage,
+      diagnosticCount: result.diagnostics.length,
+    })
+  }, [])
+
+  const editorRun: AiLastRun | null =
+    buildStatus === 'Idle' || buildStatus === 'Compiling' || buildStatus === 'Running'
+      ? null
+      : {
+          origin: 'editor',
+          status: buildStatus,
+          output,
+          exceptionType: exception?.type,
+          exceptionMessage: exception?.message,
+          diagnosticCount: diagnostics.length,
+        }
+  // The AI tab reasons about whichever run happened last in the editor or the MCP sandbox.
+  const [lastRunOrigin, setLastRunOrigin] = useState<'editor' | 'mcp'>('editor')
+  const lastRun = lastRunOrigin === 'mcp' ? (mcpRun ?? editorRun) : (editorRun ?? mcpRun)
+
   const isBusy = buildStatus === 'Compiling' || buildStatus === 'Running'
   const canRun = workerState === 'Ready' && !isBusy
   const canStop = isBusy
@@ -279,6 +311,7 @@ function App() {
     if (!manager) return
 
     const snapshot = editorRef.current?.getValue() ?? source
+    setLastRunOrigin('editor')
     setBuildStatus('Compiling')
     setDiagnostics([])
     setOutput('')
@@ -288,7 +321,7 @@ function App() {
     setComplexity(null)
 
     try {
-      const result: CompileAndRunResponsePayload = await manager.compileAndRun(snapshot, stdin)
+      const result: CompileAndRunResponsePayload = await manager.compileAndRun(snapshot)
 
       setDiagnostics(result.diagnostics)
       setOutput(result.output)
@@ -308,7 +341,7 @@ function App() {
         })
       }
 
-      setBuildStatus(result.status)
+      setBuildStatus(result.status === 'TimedOut' ? 'ExecutionTimedOut' : result.status)
     } catch (err) {
       const message = (err as Error).message
       if (message === 'Execution timed out') {
@@ -318,7 +351,7 @@ function App() {
         setException({ type: 'WorkerError', message, stack: null })
       }
     }
-  }, [source, stdin])
+  }, [source])
 
   const handleStop = useCallback(() => {
     const manager = managerRef.current
@@ -591,6 +624,13 @@ function App() {
           >
             <span>MCP Playground</span>
           </button>
+          <button
+            type="button"
+            className={`toolbar-button toolbar-button--extra${activeView === 'ai' ? ' toolbar-button--active' : ''}`}
+            onClick={() => setActiveView('ai')}
+          >
+            <span>AI (local)</span>
+          </button>
         </div>
 
         <div className="app-shell__actions">
@@ -717,11 +757,25 @@ function App() {
         className="app-shell__workspace"
         data-pane-order={layoutSettings.paneOrder}
       >
+        {aiMounted && (
+          <div className="ai-host" hidden={activeView !== 'ai'}>
+            <ErrorBoundary label="Local AI">
+              <AiPanel context={{ source, lastRun }} onOpenEditor={() => setActiveView('editor')} />
+            </ErrorBoundary>
+          </div>
+        )}
         {activeView === 'mcp' ? (
           <ErrorBoundary label="MCP Playground">
-            <McpPlayground />
+            <McpPlayground
+              source={source}
+              onSourceChange={persistSource}
+              onRunComplete={(result) => {
+                setLastRunOrigin('mcp')
+                handleMcpRunComplete(result)
+              }}
+            />
           </ErrorBoundary>
-        ) : focusMode === 'editor' ? (
+        ) : activeView === 'ai' ? null : focusMode === 'editor' ? (
           <div className="pane-wrapper" style={{ flexBasis: '100%' }}>
             {editorPane}
           </div>

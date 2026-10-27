@@ -7,10 +7,10 @@ This document tracks what has been implemented against the full program plan
 
 ### Level 0 — Feasibility spike (hard gate)
 - Verified the browser-wasm artifact boots and executes under plain Node.js
-  (`scripts/spike-node-wasm.mjs`).
+  (`scripts/spike-node-wasm.mjs`, since removed; see git history).
 - Verified hard timeouts require child-process `SIGKILL`; in-process `Promise.race`
   cannot preempt a synchronous infinite loop inside the wasm runtime
-  (`scripts/spike-node-child-timeout.mjs`).
+  (`scripts/spike-node-child-timeout.mjs`, since removed; see git history).
 - Findings: `docs/research/SPIKE_FINDINGS.md`. **Decision: GO.**
 
 ### Shared Contracts (`CodeDotNet.Contracts/`)
@@ -23,7 +23,7 @@ This document tracks what has been implemented against the full program plan
 - `CompilerHost.Compile` — Roslyn compilation with the curated FR-043 reference surface
   (`Basic.Reference.Assemblies.Net100`), extracted verbatim from the former
   `codedotnet.compiler/CompilerHost.cs` with all platform-safety comments preserved.
-- `ExecutionHost.Run` — assembly load + entry-point invocation with console/stdin capture,
+- `ExecutionHost.Run` — assembly load + entry-point invocation with console output capture,
   100,000-character output truncation, and exception capture.
 - `CompileAndRunOrchestrator.CompileAndRun` — the single orchestration path (compile →
   execute → status classification) now shared by every host, replacing logic that used to

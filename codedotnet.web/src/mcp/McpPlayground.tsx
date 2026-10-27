@@ -21,16 +21,28 @@ type CallState = 'Idle' | 'Calling' | 'Done' | 'Error'
  * validated, edited against, and demonstrated directly from the browser instead of only
  * via a stdio client.
  */
-function McpPlayground() {
+interface McpPlaygroundProps {
+  /** Shared editor source; when provided the MCP tab edits the same program as the Editor tab. */
+  source?: string
+  onSourceChange?: (value: string) => void
+  onRunComplete?: (result: CompileAndRunResponsePayload) => void
+}
+
+function McpPlayground({
+  source: sharedSource,
+  onSourceChange,
+  onRunComplete,
+}: McpPlaygroundProps = {}) {
   const clientRef = useRef<McpClient | null>(null)
   const editorRef = useRef<MonacoEditorHandle | null>(null)
-
   const [url, setUrl] = useState(DEFAULT_MCP_URL)
   const [connectionState, setConnectionState] = useState<McpConnectionState>('Disconnected')
   const [connectError, setConnectError] = useState<string | null>(null)
   const [tools, setTools] = useState<McpTool[]>([])
 
-  const [source, setSource] = useState(SAMPLE_SOURCE)
+  const [localSource, setLocalSource] = useState(SAMPLE_SOURCE)
+  const source = sharedSource ?? localSource
+  const setSource = onSourceChange ?? setLocalSource
   const [callState, setCallState] = useState<CallState>('Idle')
   const [result, setResult] = useState<CompileAndRunResponsePayload | null>(null)
   const [isToolError, setIsToolError] = useState(false)
@@ -82,14 +94,16 @@ function McpPlayground() {
       })
       const text = callResult.content[0]?.text ?? '{}'
       setRawResponse(text)
-      setResult(JSON.parse(text) as CompileAndRunResponsePayload)
+      const parsed = JSON.parse(text) as CompileAndRunResponsePayload
+      setResult(parsed)
+      onRunComplete?.(parsed)
       setIsToolError(callResult.isError)
       setCallState('Done')
     } catch (err) {
       setCallError((err as Error).message)
       setCallState('Error')
     }
-  }, [connectionState, source])
+  }, [connectionState, source, onRunComplete])
 
   const isConnected = connectionState === 'Connected'
   const isConnecting = connectionState === 'Connecting'

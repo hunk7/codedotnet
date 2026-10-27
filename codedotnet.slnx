@@ -1,6 +1,9 @@
-﻿<Solution>
+<Solution>
   <Project Path="CodeDotNet.Contracts/CodeDotNet.Contracts.csproj" />
   <Project Path="CodeDotNet.Engine/CodeDotNet.Engine.csproj" />
   <Project Path="CodeDotNet.Engine.Tests/CodeDotNet.Engine.Tests.csproj" />
+  <Project Path="CodeDotNet.Ai.Abstractions/CodeDotNet.Ai.Abstractions.csproj" />
+  <Project Path="CodeDotNet.Ai.Tests/CodeDotNet.Ai.Tests.csproj" />
+  <Project Path="CodeDotNet.Ai/CodeDotNet.Ai.csproj" />
   <Project Path="codedotnet.compiler/codedotnet.compiler.csproj" />
 </Solution>

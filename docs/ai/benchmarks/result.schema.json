@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CodeDotNet benchmark result",
+  "type": "object",
+  "required": ["benchmarkId", "timestampUtc", "gitCommit", "machine", "software", "profile", "gpuMode", "runs", "metrics"],
+  "additionalProperties": false,
+  "properties": {
+    "benchmarkId": { "type": "string", "pattern": "^BM-(0[1-9]|1[0-2])$" },
+    "timestampUtc": { "type": "string", "format": "date-time" },
+    "gitCommit": { "type": "string", "minLength": 7 },
+    "machine": {
+      "type": "object",
+      "required": ["os", "cpu", "logicalCores", "ramBytes"],
+      "properties": {
+        "os": { "type": "string" },
+        "cpu": { "type": "string" },
+        "logicalCores": { "type": "integer", "minimum": 1 },
+        "ramBytes": { "type": "integer", "minimum": 1 },
+        "gpu": { "type": ["string", "null"] },
+        "gpuDriver": { "type": ["string", "null"] }
+      }
+    },
+    "software": {
+      "type": "object",
+      "required": ["ollamaVersion", "chatModel", "chatModelDigest"],
+      "properties": {
+        "ollamaVersion": { "type": "string" },
+        "chatModel": { "type": "string" },
+        "chatModelDigest": { "type": "string" },
+        "embeddingModel": { "type": ["string", "null"] },
+        "embeddingModelDigest": { "type": ["string", "null"] }
+      }
+    },
+    "profile": { "type": "string" },
+    "gpuMode": { "enum": ["off", "auto", "on"] },
+    "warm": { "type": "boolean" },
+    "runs": { "type": "integer", "minimum": 1 },
+    "metrics": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["unit", "median", "min", "max"],
+        "properties": {
+          "unit": { "type": "string" },
+          "median": { "type": "number" },
+          "min": { "type": "number" },
+          "max": { "type": "number" },
+          "p95": { "type": "number" }
+        }
+      }
+    },
+    "notes": { "type": "string" }
+  }
+}

@@ -64,11 +64,7 @@ describe('WorkerManager stop/recover after a hung execution', () => {
     expect(manager.getState()).toBe('Ready')
 
     // Fire a CompileAndRun request that will never resolve (simulated infinite loop).
-    const hungRequest = manager.compileAndRun(
-      'while (true) {}',
-      '',
-      DEFAULT_EXECUTION_TIMEOUT_MS * 10,
-    )
+    const hungRequest = manager.compileAndRun('while (true) {}', DEFAULT_EXECUTION_TIMEOUT_MS * 10)
     // Swallow the rejection triggered by stop(); we assert on state transitions instead.
     hungRequest.catch(() => {})
 
@@ -93,11 +89,7 @@ describe('WorkerManager stop/recover after a hung execution', () => {
     const manager = new WorkerManager()
     await manager.initialize()
 
-    const hungRequest = manager.compileAndRun(
-      'while (true) {}',
-      '',
-      DEFAULT_EXECUTION_TIMEOUT_MS * 10,
-    )
+    const hungRequest = manager.compileAndRun('while (true) {}', DEFAULT_EXECUTION_TIMEOUT_MS * 10)
     manager.stop()
 
     await expect(hungRequest).rejects.toThrow()
@@ -178,11 +170,7 @@ describe('WorkerManager compileAndRun timeout handle cleanup', () => {
     await vi.runAllTimersAsync()
     await initializePromise
 
-    const runPromise = manager.compileAndRun(
-      'Console.WriteLine(1);',
-      '',
-      DEFAULT_EXECUTION_TIMEOUT_MS,
-    )
+    const runPromise = manager.compileAndRun('Console.WriteLine(1);', DEFAULT_EXECUTION_TIMEOUT_MS)
     await vi.runAllTimersAsync()
     await runPromise
 

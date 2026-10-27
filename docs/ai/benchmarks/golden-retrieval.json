@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "note": "Seed dataset for the retrieval harness. Hand-written, 6 cases only; the plan's 150-case target is NOT met. Use it to exercise the harness, not to claim quality.",
+  "documents": [
+    {
+      "title": "Span guide",
+      "source": "seed/span.md",
+      "text": "# Span<T>\nSpan<T> is a ref struct that provides a type-safe view over contiguous memory without copying.\n\n## Slicing\nSlice returns a new Span over part of the same memory, so no allocation happens."
+    },
+    {
+      "title": "Async guide",
+      "source": "seed/async.md",
+      "text": "# Async and await\nA Task represents an asynchronous operation. Use await to resume after the task completes without blocking the thread.\n\n## Async void\nAvoid async void except for event handlers because exceptions cannot be observed by the caller."
+    },
+    {
+      "title": "LINQ guide",
+      "source": "seed/linq.md",
+      "text": "# LINQ\nLINQ queries are lazily evaluated. Calling ToList forces immediate execution and materializes the results.\n\n## Deferred execution\nA query defined with Where does not run until it is enumerated."
+    },
+    {
+      "title": "Disposal guide",
+      "source": "seed/dispose.md",
+      "text": "# IDisposable\nImplement IDisposable to release unmanaged resources deterministically. The using statement calls Dispose even when an exception is thrown."
+    }
+  ],
+  "cases": [
+    { "id": "span-view", "query": "type-safe view over contiguous memory", "relevantSources": ["seed/span.md"] },
+    { "id": "span-slice", "query": "does slicing a span allocate", "relevantSources": ["seed/span.md"] },
+    { "id": "async-void", "query": "why avoid async void", "relevantSources": ["seed/async.md"] },
+    { "id": "linq-lazy", "query": "when does a Where query actually run", "relevantSources": ["seed/linq.md"] },
+    { "id": "linq-tolist", "query": "force immediate execution of a query", "relevantSources": ["seed/linq.md"] },
+    { "id": "dispose-using", "query": "using statement calls Dispose when exception thrown", "relevantSources": ["seed/dispose.md"] }
+  ]
+}

@@ -5,7 +5,7 @@ namespace CodeDotNet.Engine.Tests;
 
 /// <summary>
 /// Verifies <see cref="ExecutionHost"/> behavior (FR-060 through FR-074): console output
-/// capture, buffered STDIN, unhandled exceptions, and the 100,000-character output
+/// capture, unhandled exceptions, and the 100,000-character output
 /// truncation limit.
 /// </summary>
 public class ExecutionHostTests
@@ -26,29 +26,11 @@ public class ExecutionHostTests
             """;
 
         var assembly = CompileOrThrow(source);
-        var result = ExecutionHost.Run(assembly, string.Empty);
+        var result = ExecutionHost.Run(assembly);
 
         Assert.Contains("Hello from codedotnet!", result.Output);
         Assert.Null(result.ExceptionType);
         Assert.Equal(0, result.ExitCode);
-    }
-
-    [Fact]
-    public void Run_ProgramReadingStdin_ParsesBufferedInput()
-    {
-        const string source = """
-            using System;
-            using System.Linq;
-            int count = int.Parse(Console.ReadLine()!);
-            int[] values = Console.ReadLine()!.Split().Select(int.Parse).ToArray();
-            Console.WriteLine(values.Take(count).Sum());
-            """;
-
-        var assembly = CompileOrThrow(source);
-        var result = ExecutionHost.Run(assembly, "5\n10 20 30 40 50");
-
-        Assert.Contains("150", result.Output);
-        Assert.Null(result.ExceptionType);
     }
 
     [Fact]
@@ -60,7 +42,7 @@ public class ExecutionHostTests
             """;
 
         var assembly = CompileOrThrow(source);
-        var result = ExecutionHost.Run(assembly, string.Empty);
+        var result = ExecutionHost.Run(assembly);
 
         Assert.NotNull(result.ExceptionType);
         Assert.Contains("InvalidOperationException", result.ExceptionType);
@@ -80,7 +62,7 @@ public class ExecutionHostTests
             """;
 
         var assembly = CompileOrThrow(source);
-        var result = ExecutionHost.Run(assembly, string.Empty);
+        var result = ExecutionHost.Run(assembly);
 
         Assert.True(result.OutputTruncated);
         Assert.Equal(100_000, result.Output.Length);
@@ -95,7 +77,7 @@ public class ExecutionHostTests
             """;
 
         var assembly = CompileOrThrow(source);
-        var result = ExecutionHost.Run(assembly, string.Empty);
+        var result = ExecutionHost.Run(assembly);
 
         Assert.False(result.OutputTruncated);
         Assert.Equal("short output", result.Output);

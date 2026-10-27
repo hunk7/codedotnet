@@ -2,9 +2,9 @@
 
 ## What codedotnet does with your code
 
-codedotnet compiles and runs your C# code and STDIN entirely inside your own browser, using a
+codedotnet compiles and runs your C# code entirely inside your own browser, using a
 WebAssembly build of the .NET runtime and Roslyn running in a dedicated Web Worker. Your
-program's source code, STDIN, and output are:
+program's source code and output are:
 
 - **Never sent to any server.** codedotnet is a fully static site (hosted on GitHub Pages) with
   no backend API. There is nothing to send code to.
@@ -26,7 +26,7 @@ code or input using your browser's developer tools:
 3. Load the page fresh (reload) and let it finish initializing (the .NET runtime and worker
    assets will load — these are static files served from the same origin, e.g.
    `dotnet.wasm`, `*.dll`, `worker.js`).
-4. Type or paste some C# source and STDIN, then click **Run**.
+4. Type or paste some C# source, then click **Run**.
 5. Inspect the Network tab: after the initial static asset load, no new network requests should
    appear as a result of clicking Run. All compile/execute activity happens via in-page
    `postMessage` calls to the Web Worker, which the Network tab does not show as HTTP traffic
@@ -44,6 +44,6 @@ search for these APIs in `codedotnet.web/src` confirms this.
 > into any coding playground, even when execution is local.
 
 Although codedotnet does not transmit your code anywhere, it is still good practice to avoid
-entering sensitive information into any code playground: your STDIN/source are stored in
+entering sensitive information into any code playground: your source is stored in
 browser `localStorage` in plain text, and copy-pasted code can end up in shell history, browser
 autofill, or shared screenshots.

@@ -10,7 +10,7 @@ import {
 
 describe('worker protocol shapes', () => {
   it('builds a well-formed CompileAndRun request envelope', () => {
-    const payload: CompileAndRunRequestPayload = { source: 'Console.WriteLine(1);', stdin: '' }
+    const payload: CompileAndRunRequestPayload = { source: 'Console.WriteLine(1);' }
     const envelope: WorkerRequestEnvelope<CompileAndRunRequestPayload> = {
       protocolVersion: PROTOCOL_VERSION,
       requestId: 1,

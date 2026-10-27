@@ -67,7 +67,7 @@ Browser Main Thread
 
 ### Persistence
 
-- `localStorage` for source, STDIN, editor settings, layout settings, and theme
+- `localStorage` for source, editor settings, layout settings, and theme
   (`codedotnet.web/src/editor/editorSettings.ts`)
 - No IndexedDB usage; not required at this project's scale
 
@@ -77,9 +77,9 @@ Browser Main Thread
 - Full Playwright end-to-end coverage is intentionally deferred for v1 (see
   [`docs/security.md`](security.md) and project scope notes) in favor of Vitest/RTL component
   and unit coverage plus manual verification
-- `codedotnet.compiler.tests` (xUnit) exercises `CompilerHost` and `ExecutionHost` directly by
-  linking their source files, since the main `codedotnet.compiler` project targets
-  `browser-wasm` and cannot be referenced by a normal desktop test host
+- `CodeDotNet.Engine.Tests` (xUnit) exercises `CompilerHost` and `ExecutionHost` in
+  `CodeDotNet.Engine` natively, since the engine is a plain `net10.0` library while
+  `codedotnet.compiler` targets `browser-wasm` and cannot be referenced by a desktop test host
 
 ### CI/CD
 
@@ -94,13 +94,13 @@ Browser Main Thread
 | Application Shell | Root layout, global theme, boot status, error boundary, modal host | `App.tsx`, `components/ErrorBoundary.tsx` |
 | Toolbar | Runtime status, Run/Stop, Clear/Reset/Download, pane swap, focus/fullscreen, theme/settings, About | `App.tsx` toolbar section, `components/SettingsPanel.tsx`, `components/AboutDialog.tsx` |
 | Monaco Editor Adapter | Monaco loading, `Program.cs` model lifecycle, preferences, diagnostic markers, error navigation, keyboard commands, disposal | `components/MonacoEditor.tsx`, `diagnostics.ts` |
-| I/O Panel | STDIN editing, output rendering, problems list, execution status, timings, output clearing/truncation indicator | `App.tsx` I/O pane section |
+| I/O Panel | Output rendering, problems list, execution status, timings, output clearing/truncation indicator | `App.tsx` I/O pane section |
 | Layout Manager | Pane ratios/order, nested I/O ratio, focus modes, fullscreen, keyboard divider movement, persistence, default restoration | `App.tsx` layout state + `editor/editorSettings.ts` |
 | Settings Service | Default settings, validation, schema version, migration, persistence, reset | `editor/editorSettings.ts` |
 | Execution Coordinator | Execution state machine, request creation/correlation, run lock, timeout, stop, worker recovery, result aggregation | `App.tsx` (`handleRun`/`handleStop`), `workers/workerManager.ts` |
 | Worker Manager | Worker creation, runtime init, message transport, failure detection, termination/replacement, stale-message rejection | `workers/workerManager.ts` |
 | Compiler Host | Parse source, configure Roslyn, load/reuse references, emit in-memory assembly, diagnostics conversion | `codedotnet.compiler/CompilerHost.cs` |
-| Execution Host | Load assembly, provide STDIN, capture stdout/stderr, execute entry point, capture exceptions, report timings | `codedotnet.compiler/ExecutionHost.cs` |
+| Execution Host | Load assembly, capture stdout/stderr, execute entry point, capture exceptions, report timings | `codedotnet.compiler/ExecutionHost.cs` |
 
 See also: [`docs/security.md`](security.md) for the security model and CSP, and
 [`docs/privacy.md`](privacy.md) for the data-handling and privacy-verification procedure.

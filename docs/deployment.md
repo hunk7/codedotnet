@@ -7,7 +7,7 @@ backend/server component to deploy.
 ## Triggers
 
 - `pull_request` targeting `main` — runs the `validate` job only.
-- `push` to `main` — runs `validate`, then `deploy`.
+- `push` to `main` — runs `validate`, then `deploy`. Pushes that only change `docs/**` or Markdown files do not trigger it.
 - `workflow_dispatch` — manual run from the Actions tab.
 
 ## `validate` job (runs on every PR and push to `main`)
@@ -17,7 +17,7 @@ Implements §18.1 PR validation:
 1. Checkout, set up .NET 10 and Node 22.
 2. `dotnet restore` + `dotnet build` for `codedotnet.compiler` (Release, browser-wasm).
 3. Discover and run any `.csproj` referencing `Microsoft.NET.Test.Sdk` via
-   `dotnet test -c Release` (currently `codedotnet.compiler.tests`; see
+   `dotnet test -c Release` (currently `CodeDotNet.Engine.Tests`; see
    [`docs/testing.md`](testing.md)).
 4. `npm ci` in `codedotnet.web`.
 5. `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test`.
@@ -44,6 +44,27 @@ Implements §18.2 main-branch deployment:
 7. Report the total build artifact size (§18.4).
 8. Upload the Pages artifact (`actions/upload-pages-artifact`) and deploy it
    (`actions/deploy-pages`), reporting the deployment URL as the job's `environment.url`.
+
+## Hosted site and the local AI tab
+
+The deployed site contains all three tabs. Pages serves only static files: the **Editor** works
+fully on the hosted site, while **MCP Playground** and **AI (local)** need the local services
+(`codedotnet-sandbox`, `CodeDotNet.Ai`, Ollama) running on the visitor's own machine. The UI only
+accepts loopback service URLs, and the page CSP allows connections only to `127.0.0.1`/`localhost`
+on the sandbox and AI ports.
+
+The local services reject unknown browser origins by default. To use the hosted site against your
+own machine, start them with the Pages origin allowed:
+
+```powershell
+scripts/dev/Start-CodeDotNet.ps1 -NoFrontend -AllowedOrigin https://<username>.github.io
+```
+
+This sets `Ai:AllowedOrigins` for the AI service and `MCP_ALLOWED_ORIGIN` for the sandbox. The AI
+service also answers Chromium's Private Network Access preflight
+(`Access-Control-Allow-Private-Network`) for allowed origins. Pairing is still required.
+
+One-time repository setting: **Settings → Pages → Source: GitHub Actions**.
 
 ## Custom domains and HTTPS
 

@@ -60,7 +60,6 @@ build and manual/CI smoke checks.
   - Warning-only source still compiles successfully and still reports the warning diagnostic.
 - `ExecutionHostTests.cs`:
   - Console output is captured for a simple program.
-  - Buffered STDIN is correctly consumed by a program reading multiple lines.
   - An unhandled exception is captured (type/message/exit code) rather than propagating out of
     `ExecutionHost.Run`.
   - Output exceeding the 100,000-character limit is truncated and flagged.

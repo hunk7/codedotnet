@@ -23,7 +23,7 @@ Node.js, without a browser/worker context, using the same `dotnet.create()` /
 2. Script: `scripts/spike-node-wasm.mjs` (temporary, not part of shipped product).
    Imports `dotnet` from the generated `_framework/dotnet.js`, boots the runtime, gets
    assembly exports, and invokes the same `[JSExport]` methods the browser worker uses:
-   `RuntimeInfo.GetRuntimeInformation()` and `CompileAndRunHost.CompileAndRun(source, stdin)`.
+   `RuntimeInfo.GetRuntimeInformation()` and `CompileAndRunHost.CompileAndRun(source)`.
 
 **Result: PASS.** All steps succeeded with no code changes to the existing compiler host.
 
@@ -120,5 +120,5 @@ planned. No architectural pivot is required based on this spike.
   and remains a Level 11 concern (process-level memory limits via OS primitives).
 - The temporary spike scripts (`scripts/spike-node-wasm.mjs`,
   `scripts/spike-node-child-timeout.mjs`, `scripts/spike-child-infinite-loop.mjs`) were
-  kept in the repo as evidence/reproduction artifacts; they are not wired into CI and can
-  be removed or relocated under `codedotnet-sandbox/` once Level 7+ scaffolding begins.
+  used as evidence and have since been removed from the repository. They remain available in
+  git history. The behaviour they proved is implemented in `codedotnet-sandbox/src/workerPool.mjs`.

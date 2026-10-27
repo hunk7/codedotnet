@@ -254,7 +254,7 @@ Included:
 
 ### 7.3 `execute_csharp`
 
-- **FR-EXE-001:** Accept source, stdin, arguments, profile, and requested timeout.
+- **FR-EXE-001:** Accept source, arguments, profile, and requested timeout.
 - **FR-EXE-002:** Clamp timeout to server-defined minimum and maximum values.
 - **FR-EXE-003:** Compile source using Roslyn in memory.
 - **FR-EXE-004:** Execute only when compilation and policy validation succeed.
@@ -379,7 +379,7 @@ flowchart LR
 - The supervisor is trusted orchestration code.
 - The worker is disposable infrastructure and is not trusted to remain healthy after a guest failure.
 - The Wasm runtime and CodeDotNet runner form the immediate managed execution environment.
-- Generated C# source, arguments, stdin, and generated tests are untrusted.
+- Generated C# source, arguments, and generated tests are untrusted.
 
 ---
 
@@ -698,7 +698,6 @@ Input:
   "languageVersion": "preview",
   "profile": "algorithm",
   "timeoutMs": 3000,
-  "stdin": "",
   "arguments": []
 }
 ```
@@ -840,7 +839,7 @@ Each error contains:
 #### Untrusted
 
 - C# source.
-- stdin and command arguments.
+- command arguments.
 - generated test source.
 - MCP tool arguments.
 - guest output.
@@ -1017,7 +1016,6 @@ Disallowed wording unless formally proven:
 Initial defaults to validate through benchmarks:
 
 - Maximum source: 100 KiB.
-- Maximum stdin: 64 KiB.
 - Maximum arguments: 32.
 - Maximum argument length: 4 KiB.
 - Maximum stdout: 64 KiB.
@@ -1413,7 +1411,6 @@ Log to stderr:
 Never log by default:
 
 - complete source,
-- complete stdin,
 - environment variables,
 - user paths unless sanitized,
 - host secrets,

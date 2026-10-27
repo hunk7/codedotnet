@@ -1,7 +1,20 @@
 # codedotnet-sandbox
 
-A minimal Model Context Protocol (MCP) stdio server that exposes a sandboxed
-`compile_and_run` tool for single-file C# programs.
+A minimal Model Context Protocol (MCP) server that exposes a sandboxed
+`compile_and_run` tool for single-file C# programs over **stdio** and **WebSocket**.
+
+It is used by three consumers: external MCP clients (VS Code, Claude Desktop, Cursor, Continue),
+the **MCP Playground** tab in `codedotnet.web`, and the local AI service (`CodeDotNet.Ai`), which
+uses it to run code for the **Debug** and **Generate tests** workflows. See the
+[root README](../README.md) for the full local setup and the
+[demo](../docs/images/demo.gif).
+
+## Prerequisites
+
+- [Node.js 22+](https://nodejs.org/) (`package.json` requires `>=20`; 22 is the tested version).
+- [.NET 10 SDK](https://dotnet.microsoft.com/download), only to build the worker assets once.
+- Worker assets published into `codedotnet.web/public/dotnet-worker`. Build them from the
+  repository root with `cd codedotnet.web; npm run build:worker` (or `scripts/copy-worker-assets.ps1`).
 
 ## Architecture
 
@@ -54,13 +67,23 @@ terminating the OS process (`SIGKILL`) reliably reclaims control. The pool:
 
 ## Running
 
+| Command | Transport | Use for |
+| --- | --- | --- |
+| `npm start` | stdio | MCP clients that spawn the server (VS Code, Claude Desktop, Cursor, Continue) |
+| `npm run serve` | WebSocket `ws://127.0.0.1:7900` | MCP Playground tab and the local AI service |
+| `npm test` | none | Runs the sandbox unit tests (`node --test`) |
+
 ```powershell
 cd codedotnet-sandbox
 npm install
-npm start
+npm start        # stdio
+npm run serve    # WebSocket on 127.0.0.1:7900
 ```
 
-The server communicates over stdio using JSON-RPC 2.0 framed MCP-style messages
+The whole stack (sandbox, AI service and frontend) can be started together with
+`scripts/dev/Start-CodeDotNet.ps1` from the repository root.
+
+The stdio server communicates over stdio
 (`initialize`, `tools/list`, `tools/call`). See `src/server.mjs` for the exact method
 surface. This is a deliberately minimal, dependency-free implementation (no
 `@modelcontextprotocol/sdk` dependency) so it can run without network/package-registry
@@ -78,7 +101,6 @@ Input:
 ```json
 {
   "source": "using System;\nConsole.WriteLine(\"hi\");",
-  "stdin": "",
   "timeoutMs": 10000
 }
 ```
@@ -90,7 +112,8 @@ timing fields), plus `timedOut: true` if the hard timeout fired.
 ## Status / scope
 
 This is a working v0.1 scaffold implementing worker-pool isolation and hard timeouts
-(the two properties validated in the Level 0 spike). Not yet implemented, deferred to
+(the two properties validated in the Level 0 spike, see `../docs/research/SPIKE_FINDINGS.md`;
+the temporary spike scripts have since been removed).
 follow-up work: memory/resource ceilings beyond timeout, a capability/permission model,
 structured audit logging, and full MCP SDK protocol compliance (prompts/resources,
 cancellation notifications, etc).
@@ -117,6 +140,8 @@ npm install
 npm run dev
 ```
 
+Or start everything with `scripts/dev/Start-CodeDotNet.ps1`.
+
 Then open the dev server URL in a browser, switch to the **MCP Playground** tab, click
 **Connect** (using the default `ws://127.0.0.1:7900`, or override via the URL field),
 edit the sample C# program, and click **Call compile_and_run**. The panel shows the
@@ -129,10 +154,12 @@ parsed result (status, output, diagnostics, timings) as well as the raw JSON-RPC
 > for a serverless static-site deployment (e.g. GitHub Pages), so this server is never
 > deployed — it must be run locally by anyone who wants a live MCP Playground connection.
 
-Set `MCP_ALLOWED_ORIGIN` (exact origin string, or `*` to disable the check) if the web
-app is served from somewhere other than `localhost`. By default the WebSocket server
-accepts any origin in local development; tighten this before exposing it beyond your
-machine.
+Set `MCP_ALLOWED_ORIGIN` to a comma-separated list of exact origins (or `*` to disable the check)
+if the web app is served from somewhere other than `localhost`, for example the hosted GitHub Pages
+site: `MCP_ALLOWED_ORIGIN=http://localhost:5173,https://<username>.github.io npm run serve`.
+When unset, only loopback origins (local dev servers) are accepted. `scripts/dev/Start-CodeDotNet.ps1
+-AllowedOrigin https://<username>.github.io` sets this for you. Tighten this before exposing the
+server beyond your machine.
 
 ## Registering with an MCP client
 
@@ -167,7 +194,7 @@ transport and tool surface, for tooling that can consume it directly.
 ```
 
 Either client will discover the single `compile_and_run` tool via `tools/list` and can
-invoke it with `{ "source": "...", "stdin": "...", "timeoutMs": 10000 }`.
+invoke it with `{ "source": "...", "timeoutMs": 10000 }`.
 
 ### Cursor (`.cursor/mcp.json`)
 

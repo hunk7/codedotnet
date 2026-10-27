@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CodeDotNet.Ai.Abstractions\CodeDotNet.Ai.Abstractions.csproj" />
+    <ProjectReference Include="..\CodeDotNet.Contracts\CodeDotNet.Contracts.csproj" />
+    <ProjectReference Include="..\CodeDotNet.Engine\CodeDotNet.Engine.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CodeDotNet.Ai.Tests" />
+  </ItemGroup>
+
+</Project>

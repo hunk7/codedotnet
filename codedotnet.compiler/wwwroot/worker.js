@@ -48,8 +48,7 @@ self.addEventListener(
         }
         case 'CompileAndRun': {
           const source = (requestPayload && requestPayload.source) || ''
-          const stdin = (requestPayload && requestPayload.stdin) || ''
-          const json = assemblyExports.CodeDotNet.Compiler.CompileAndRunHost.CompileAndRun(source, stdin)
+          const json = assemblyExports.CodeDotNet.Compiler.CompileAndRunHost.CompileAndRun(source)
           payload = JSON.parse(json)
           break
         }

@@ -48,7 +48,7 @@ Browser Main Thread
      +-- React + TypeScript application
      +-- Monaco Editor
      +-- Toolbar and layout
-     +-- STDIN, output and diagnostics
+     +-- Output and diagnostics
      +-- Settings and local persistence
      +-- Worker lifecycle manager
               |
@@ -345,7 +345,7 @@ Only start this phase after the Web Worker feasibility and recovery checks pass.
 
 # 10. Execute the Emitted Assembly
 
-Extend the worker pipeline: C# source → Roslyn compilation → in-memory assembly → entry-point execution → captured console output. Redirect console streams with `try/finally`, treat STDIN as a fully buffered input, apply a 100,000-character output limit, and enforce a 5-second execution timeout by terminating the worker from the main thread.
+Extend the worker pipeline: C# source → Roslyn compilation → in-memory assembly → entry-point execution → captured console output. Redirect console streams with `try/finally`, apply a 100,000-character output limit, and enforce a 5-second execution timeout by terminating the worker from the main thread.
 
 ---
 

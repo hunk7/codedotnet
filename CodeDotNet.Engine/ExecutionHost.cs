@@ -5,14 +5,14 @@ namespace CodeDotNet.Engine;
 
 /// <summary>
 /// Loads an in-memory emitted assembly and executes its entry point, capturing console
-/// output, stdin, exceptions and timings. Shared by every host (browser-wasm worker, MCP
+/// output, exceptions and timings. Shared by every host (browser-wasm worker, MCP
 /// sandbox worker).
 /// </summary>
 public static class ExecutionHost
 {
     private const int MaxOutputCharacters = 100_000;
 
-    public static ExecutionResult Run(byte[] assemblyBytes, string stdin)
+    public static ExecutionResult Run(byte[] assemblyBytes)
     {
         var outputBuilder = new StringBuilder();
         var truncated = false;
@@ -45,12 +45,10 @@ public static class ExecutionHost
         var originalOut = Console.Out;
         var originalErr = Console.Error;
 
-        // NOTE: on browser-wasm, the Console.In *getter* throws PlatformNotSupportedException
-        // (Arg_PlatformNotSupported) because it tries to lazily create a real stdin stream,
-        // which does not exist in the browser. Console.SetIn(...) itself is safe (it just
-        // stores a field), so we never read the original reader back - there is nothing
-        // meaningful to restore to on this platform. On desktop/Node-hosted platforms this
-        // getter succeeds normally and the original reader is restored.
+        // NOTE: the application provides no program input. On browser-wasm the Console.In getter
+        // throws PlatformNotSupportedException, so the original reader is only restored when it can
+        // be read. While the program runs, input is an empty reader so a stray Console.ReadLine()
+        // returns null instead of throwing.
         TextReader? originalIn = null;
         try
         {
@@ -62,7 +60,6 @@ public static class ExecutionHost
         }
 
         var writer = new CallbackTextWriter(AppendOutput);
-        var reader = new StringReader(stdin ?? string.Empty);
 
         string? exceptionType = null;
         string? exceptionMessage = null;
@@ -73,7 +70,7 @@ public static class ExecutionHost
         {
             Console.SetOut(writer);
             Console.SetError(writer);
-            Console.SetIn(reader);
+            Console.SetIn(TextReader.Null);
 
             var assembly = System.Reflection.Assembly.Load(assemblyBytes);
 #pragma warning disable IL2026 // Roslyn-emitted user program assemblies cannot be annotated for trimming.

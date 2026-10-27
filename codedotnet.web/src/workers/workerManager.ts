@@ -127,12 +127,10 @@ export class WorkerManager {
    */
   async compileAndRun(
     source: string,
-    stdin: string,
     timeoutMs: number = DEFAULT_EXECUTION_TIMEOUT_MS,
   ): Promise<CompileAndRunResponsePayload> {
     const requestPromise = this.send('CompileAndRun', {
       source,
-      stdin,
     }) as Promise<CompileAndRunResponsePayload>
 
     let timeoutHandle: ReturnType<typeof setTimeout> | undefined

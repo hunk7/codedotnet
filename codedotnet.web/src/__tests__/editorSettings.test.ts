@@ -6,8 +6,6 @@ import {
   saveLayoutSettings,
   loadTheme,
   saveTheme,
-  loadStdin,
-  saveStdin,
   loadSource,
   saveSource,
   resolveTheme,
@@ -26,7 +24,6 @@ describe('editorSettings persistence and validation', () => {
     expect(loadEditorSettings()).toEqual(DEFAULT_EDITOR_SETTINGS)
     expect(loadLayoutSettings()).toEqual(DEFAULT_LAYOUT_SETTINGS)
     expect(loadTheme()).toBe('system')
-    expect(loadStdin()).toBe('')
     expect(loadSource()).toBe(DEFAULT_SOURCE)
   })
 
@@ -82,21 +79,16 @@ describe('editorSettings persistence and validation', () => {
     expect(['vs-dark', 'vs-light']).toContain(resolveTheme('system'))
   })
 
-  it('round-trips stdin and source', () => {
-    saveStdin('hello')
-    expect(loadStdin()).toBe('hello')
-
+  it('round-trips source', () => {
     saveSource('Console.WriteLine(1);')
     expect(loadSource()).toBe('Console.WriteLine(1);')
   })
 
   it('clears all persisted keys via clearAllLocalData', () => {
-    saveStdin('x')
     saveSource('y')
     saveTheme('vs-light')
     clearAllLocalData()
 
-    expect(loadStdin()).toBe('')
     expect(loadSource()).toBe(DEFAULT_SOURCE)
     expect(loadTheme()).toBe('system')
   })
