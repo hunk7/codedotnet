@@ -17,7 +17,7 @@ public class CompileAndRunOrchestratorTests
             Console.WriteLine("Hello from orchestrator!");
             """;
 
-        var response = CompileAndRunOrchestrator.CompileAndRun(source, string.Empty);
+        var response = CompileAndRunOrchestrator.CompileAndRun(source);
 
         Assert.Equal("ExecutionCompleted", response.Status);
         Assert.Contains("Hello from orchestrator!", response.Output);
@@ -33,7 +33,7 @@ public class CompileAndRunOrchestratorTests
             Console.WriteLine("missing semicolon")
             """;
 
-        var response = CompileAndRunOrchestrator.CompileAndRun(source, string.Empty);
+        var response = CompileAndRunOrchestrator.CompileAndRun(source);
 
         Assert.Equal("BuildFailed", response.Status);
         Assert.Contains(response.Diagnostics, d => d.Severity == "Error");
@@ -48,7 +48,7 @@ public class CompileAndRunOrchestratorTests
             throw new InvalidOperationException("boom");
             """;
 
-        var response = CompileAndRunOrchestrator.CompileAndRun(source, string.Empty);
+        var response = CompileAndRunOrchestrator.CompileAndRun(source);
 
         Assert.Equal("ExecutionFailed", response.Status);
         Assert.Equal("boom", response.ExceptionMessage);

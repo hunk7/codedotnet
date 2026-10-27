@@ -6,8 +6,8 @@ namespace CodeDotNet.Ai.Security;
 public sealed record PairResult(bool Success, string? Token, DateTimeOffset? ExpiresAt, bool CodeExpiredOrLocked);
 
 /// <summary>
-/// Exchanges a short single-use pairing code (printed on the service console) for a bearer
-/// session token. Failed attempts are limited; the code expires; only token hashes are kept.
+/// Exchanges a short pairing code (printed on the service console, reusable for its 30 minute
+/// lifetime) for a bearer session token. Failed attempts are limited; only token hashes are kept.
 /// </summary>
 public sealed class PairingService(TimeProvider time, ILogger<PairingService> logger)
 {
@@ -104,11 +104,8 @@ public sealed class PairingService(TimeProvider time, ILogger<PairingService> lo
                 return new PairResult(false, null, null, false);
             }
 
-            // The code is single-use: issue (and log) the next one straight away so the console always
-            // shows a code that works, instead of leaving the service with no usable code.
-            GenerateCode();
-            logger.LogWarning("Pairing code used. Next pairing code: {Code}", _code);
-
+            // The code stays valid (reusable) until it expires; each pairing gets its own session token.
+            _failures = 0;
             PurgeExpired(now);
             while (_sessions.Count >= MaxSessions)
             {

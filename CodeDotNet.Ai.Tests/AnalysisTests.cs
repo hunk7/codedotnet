@@ -241,7 +241,7 @@ public class WorkflowApiTests
     {
         public int Calls { get; private set; }
 
-        public Task<CompileAndRunResponse> CompileAndRunAsync(string source, string stdin, int timeoutMs, CancellationToken ct)
+        public Task<CompileAndRunResponse> CompileAndRunAsync(string source, int timeoutMs, CancellationToken ct)
         {
             Calls++;
             return Task.FromResult(respond());

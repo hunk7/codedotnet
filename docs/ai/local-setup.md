@@ -1,6 +1,8 @@
 # Local Setup (Windows)
 
-Status: **Scripts exist under `scripts/dev/` (Phase 1). Verified locally without Ollama: prerequisite check, hardware probe, sandbox MCP probe, AI service health/auth/Origin. Not yet verified: end-to-end with a real Ollama model, `Start-CodeDotNet.ps1` full run, GPU mode.**
+See the [full local stack guide](../local-stack.md) for the shortest path and the [demo video](../images/codenet.mp4) for a walkthrough of the running stack.
+
+Status: **Scripts exist under `scripts/dev/`. The full stack (sandbox, AI service, frontend, Ollama, pairing, review, debug, test generation and Ask) has been run end to end locally. Not yet verified: GPU mode, a live Qdrant and published benchmarks.**
 
 ## Prerequisites
 
@@ -14,21 +16,21 @@ Status: **Scripts exist under `scripts/dev/` (Phase 1). Verified locally without
 1. Clone the repository and stay on the working branch.
 2. `scripts/dev/Install-CodeDotNetPrereqs.ps1`: verifies tools, prints what is missing; installs nothing without confirmation.
 3. `scripts/dev/Invoke-HardwareProbe.ps1`: writes the probe result and the chosen profile.
-4. Pull models listed by the profile (names unverified; see [`hardware-and-resource-profiles.md`](hardware-and-resource-profiles.md)).
+4. Pull the models: `ollama pull qwen2.5-coder:7b` (or `qwen2.5-coder:1.5b` on small machines) and `ollama pull nomic-embed-text`. If the profile's chat model is missing, the service falls back to another installed chat model and logs a warning; see [`hardware-and-resource-profiles.md`](hardware-and-resource-profiles.md).
 5. Build worker assets: `npm run build:worker` in `codedotnet.web` [V command].
 6. `scripts/dev/Start-CodeDotNet.ps1`: starts Ollama (if needed), sandbox, AI service, frontend; prints a pairing code.
 7. Open the frontend and enter the pairing code.
 8. `scripts/dev/Test-CodeDotNetHealth.ps1`: expect exit code 0.
-9. `scripts/dev/Test-CodeDotNetSmoke.ps1`: pairing, auth, Origin, knowledge-base round trip. Uses the pairing code from `.codedotnet/logs/ai.out.log`, which is single-use, so restart the stack before each run. Ollama-dependent checks print `[SKIP]` when Ollama is not running.
+9. `scripts/dev/Test-CodeDotNetSmoke.ps1`: pairing, auth, Origin, knowledge-base round trip. Uses the pairing code from `.codedotnet/logs/ai.out.log`, which stays valid for 30 minutes (restart the stack if it has expired). Ollama-dependent checks print `[SKIP]` when Ollama is not running.
 
 ## Manual validation
 
 1. **Build and tests:** `dotnet build codedotnet.slnx -c Release`; `dotnet test CodeDotNet.Engine.Tests -c Release`; `dotnet test CodeDotNet.Ai.Tests -c Release`; `npm test` in `codedotnet-sandbox`; `npm test`, `npm run typecheck`, `npm run lint`, `npm run build` in `codedotnet.web`.
 2. **Start:** `scripts/dev/Start-CodeDotNet.ps1`. Note the pairing code it prints.
 3. **Playground without AI:** open http://localhost:5173, run the default C# program, and confirm output appears. This must work even if the AI service is stopped.
-4. **MCP tab:** open the MCP tab and run a snippet through the sandbox.
-click **Check service** (expect
-6. **With Ollama** (`ollama pull qwen2.5-coder:7b` and `ollama pull nomic-embed-text`): health becomes `ok`, and an Ask streams an answer. With "use knowledge base" on, citations appear for ingested documents.
+4. **MCP tab:** open the MCP tab, click **Connect**, and run a snippet through the sandbox.
+5. **AI tab:** open the AI (local) tab, paste the pairing code, click **Pair**, then click **Check service** (expect `ok`, or `degraded` if the embedding model is not pulled).
+6. **With Ollama**
 7. **Security:** from PowerShell, `Invoke-RestMethod http://127.0.0.1:7901/v1/kb/documents` returns 401. Sending `-Headers @{Origin='https://evil.example'}` returns 403. `netstat -ano | findstr 7901` shows only `127.0.0.1`.
 8. **Stop:** `scripts/dev/Stop-CodeDotNet.ps1`; ports 7900, 7901 and 5173 are free again.
 9. **Packaging:** `scripts/dev/Publish-CodeDotNetAi.ps1`, then `dotnet artifacts/ai/CodeDotNet.Ai.dll`.

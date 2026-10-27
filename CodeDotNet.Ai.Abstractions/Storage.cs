@@ -55,5 +55,5 @@ public interface IVectorStore
 /// <summary>Runs C# in the existing sandbox (MCP <c>compile_and_run</c>). Never runs code in-process.</summary>
 public interface ISandboxClient
 {
-    Task<CompileAndRunResponse> CompileAndRunAsync(string source, string stdin, int timeoutMs, CancellationToken cancellationToken = default);
+    Task<CompileAndRunResponse> CompileAndRunAsync(string source, int timeoutMs, CancellationToken cancellationToken = default);
 }

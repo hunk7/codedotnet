@@ -103,13 +103,12 @@ function App() {
   const [saveState, setSaveState] = useState<'saved' | 'pending' | 'unavailable'>('saved')
   const [hasBootstrapped, setHasBootstrapped] = useState(false)
   const [activeView, setActiveView] = useState<'editor' | 'mcp' | 'ai'>('editor')
-  // The AI tab stays mounted after its first visit: its pairing token lives in memory only and pairing
-  // codes are single-use, so unmounting it on every tab switch would force a re-pair each time.
+  // The AI tab stays mounted after its first visit: its pairing token lives in memory only, so
+  // unmounting it on every tab switch would force a re-pair each time.
   const [aiMounted, setAiMounted] = useState(false)
   if (activeView === 'ai' && !aiMounted) setAiMounted(true)
 
   const [source, setSource] = useState(() => loadSource())
-  const stdin = ''
 
   const [buildStatus, setBuildStatus] = useState<BuildStatus>('Idle')
   const [diagnostics, setDiagnostics] = useState<DiagnosticPayload[]>([])
@@ -322,7 +321,7 @@ function App() {
     setComplexity(null)
 
     try {
-      const result: CompileAndRunResponsePayload = await manager.compileAndRun(snapshot, stdin)
+      const result: CompileAndRunResponsePayload = await manager.compileAndRun(snapshot)
 
       setDiagnostics(result.diagnostics)
       setOutput(result.output)
@@ -352,7 +351,7 @@ function App() {
         setException({ type: 'WorkerError', message, stack: null })
       }
     }
-  }, [source, stdin])
+  }, [source])
 
   const handleStop = useCallback(() => {
     const manager = managerRef.current

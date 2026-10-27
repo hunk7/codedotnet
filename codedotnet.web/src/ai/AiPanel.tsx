@@ -136,7 +136,7 @@ function AiPanel({ context = EMPTY_CONTEXT, onOpenEditor }: AiPanelProps) {
       setConnectError(
         err instanceof AiApiError
           ? err.code === 'pairing_code_expired'
-            ? `${err.message} Codes are single-use and valid for 30 minutes; copy the newest "Pairing code" line from the service console.`
+            ? `${err.message} Copy the newest "Pairing code" line from the service console.`
             : err.message
           : 'Could not reach the AI service. Start it with scripts/dev/Start-CodeDotNet.ps1.',
       )
@@ -208,7 +208,7 @@ function AiPanel({ context = EMPTY_CONTEXT, onOpenEditor }: AiPanelProps) {
   const handleWorkflow = useCallback(
     async (kind: AiWorkflow) => {
       if (!hasCode) return
-      const focus = kind === 'tests' ? undefined : buildRunFocus(context.lastRun)
+      const focus = buildRunFocus(context.lastRun)
       await consume(WORKFLOW_LABEL[kind], (signal) =>
         getClient().workflow(kind, { source: context.source, focus }, signal),
       )

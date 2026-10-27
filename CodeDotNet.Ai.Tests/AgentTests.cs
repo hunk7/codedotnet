@@ -22,7 +22,7 @@ public class AgentTests
     {
         public List<string> Sources { get; } = [];
 
-        public async Task<CompileAndRunResponse> CompileAndRunAsync(string source, string stdin, int timeoutMs, CancellationToken ct)
+        public async Task<CompileAndRunResponse> CompileAndRunAsync(string source, int timeoutMs, CancellationToken ct)
         {
             Sources.Add(source);
             await Task.Yield();

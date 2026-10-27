@@ -114,7 +114,6 @@ The following measurements shall be collected from real builds and test devices.
 - Syntax errors generate accurate Roslyn diagnostics.
 - Diagnostics map to the correct Monaco Editor line and column.
 - `Console.Write` and `Console.WriteLine` output is captured.
-- Buffered STDIN is available to programs where the runtime integration supports normal console input.
 - Infinite loops can be stopped by terminating the execution worker.
 - The user can run multiple programs sequentially without refreshing the application.
 - Editor source and preferences survive a normal browser refresh.
@@ -258,7 +257,6 @@ Wants to assess the project's architecture, runtime integration, reliability, te
 - First-time users accept a larger download for runtime and compiler assets.
 - Subsequent visits benefit from browser caching.
 - User code is intended for short-running educational and experimental programs.
-- STDIN can be supplied as a complete buffered string before execution.
 - No backend service is available to compensate for unsupported WebAssembly APIs.
 
 ## 8.2 Constraints
@@ -321,7 +319,7 @@ Visual principles:
 │ codedotnet   .NET 10   Run   Stop   Clear   Layout   Settings │
 ├──────────────────────────────────┬────────────────────────────┤
 │ Program.cs                       │ I/O                        │
-├──────────────────────────────────┤ STDIN                      │
+├──────────────────────────────────┤                            │
 │                                  │                            │
 │ Monaco C# Editor                 ├────────────────────────────┤
 │                                  │ Output / Problems          │
@@ -335,8 +333,7 @@ Suggested initial pane proportions:
 
 - Editor pane: 65%
 - I/O pane: 35%
-- STDIN section: 30% of I/O pane height
-- Output section: 70% of I/O pane height
+- Output section: 100% of I/O pane height
 
 ## 9.3 Branding and domain display
 
@@ -578,7 +575,7 @@ Because source is autosaved locally, the UI shall distinguish between:
 
 ### FR-040: Run action
 
-The Run action shall create an immutable snapshot of the current source and STDIN, then send that snapshot to the worker.
+The Run action shall create an immutable snapshot of the current source, then send that snapshot to the worker.
 
 ### FR-041: Roslyn compilation
 
@@ -695,32 +692,9 @@ The execution host shall capture:
 - Standard error where practical
 - Unhandled exceptions
 
-### FR-063: Buffered STDIN
+### FR-063: No program input
 
-The I/O pane shall provide a multiline STDIN field. Version 1 shall treat it as a complete input buffer supplied before execution.
-
-Example input:
-
-```plaintext
-5
-10 20 30 40 50
-```
-
-Example program:
-
-```csharp
-int count = int.Parse(Console.ReadLine()!);
-int[] values = Console.ReadLine()!
-    .Split()
-    .Select(int.Parse)
-    .ToArray();
-
-Console.WriteLine(values.Sum());
-```
-
-### FR-064: STDIN limitations
-
-If the browser runtime cannot provide fully interactive terminal input, the application shall clearly document that programs cannot pause and wait for new user input after execution starts.
+Version 1 provides no program input. Console input is empty while a program runs, so `Console.ReadLine()` returns `null`. This is documented in the known limitations.
 
 ### FR-065: Execution state
 
@@ -827,7 +801,7 @@ Suggested minimum widths:
 
 ### FR-084: Nested I/O divider
 
-STDIN and Output/Problems shall use a vertically draggable divider.
+Output and Problems shall use a vertically draggable divider.
 
 ### FR-085: Editor focus mode
 
@@ -954,7 +928,6 @@ Actions shall be enabled or disabled based on execution state. For example, Stop
 codedotnet may locally persist:
 
 - Current `Program.cs`
-- STDIN buffer
 - Theme
 - Editor preferences
 - Pane order
@@ -1377,7 +1350,6 @@ Responsibilities:
 
 Responsibilities:
 
-- STDIN editing
 - Output rendering
 - Problems list
 - Execution status
@@ -1449,7 +1421,6 @@ Responsibilities:
 Responsibilities:
 
 - Load generated assembly
-- Provide STDIN
 - Capture stdout and stderr
 - Execute entry point
 - Capture exceptions
@@ -1539,7 +1510,6 @@ The UI shall derive command availability from this state model rather than from 
 
 ```plaintext
 codedotnet.source
-codedotnet.stdin
 codedotnet.editor.settings
 codedotnet.layout.settings
 codedotnet.theme
@@ -1869,7 +1839,7 @@ Playwright shall verify:
 10. Pane order and ratio survive refresh.
 11. Reset restores starter code.
 12. Download creates `Program.cs`.
-13. No application-controlled request contains source or STDIN.
+13. No application-controlled request contains source.
 
 ## 21.6 Browser matrix
 
@@ -1894,7 +1864,7 @@ Version 1 is accepted only when all conditions are met:
 6. The actual browser runtime identifies itself as .NET 10.
 7. A basic C# program compiles and runs locally.
 8. Console output is displayed.
-9. Buffered STDIN works for supported console-read scenarios or its limitation is explicitly documented.
+9. Programs have no console input; the limitation is explicitly documented.
 10. Invalid source returns structured Roslyn diagnostics.
 11. Diagnostics appear as Monaco markers.
 12. Diagnostic selection navigates to the source location.
@@ -1911,7 +1881,7 @@ Version 1 is accepted only when all conditions are met:
 23. Source and output limits are enforced.
 24. Automated tests pass in GitHub Actions.
 25. Required production assets are validated before deployment.
-26. Source and STDIN are not transmitted to a backend.
+26. Source is not transmitted to a backend.
 27. The product uses original codedotnet branding.
 28. Architecture, privacy, limitations, testing, and deployment are documented.
 29. Real performance measurements are published.
@@ -1942,7 +1912,7 @@ Version 1 is accepted only when all conditions are met:
 - Curated reference assemblies
 - Web Worker execution
 - Console output
-- Buffered STDIN or documented limitation
+- No-program-input limitation documented
 - Compilation diagnostics
 - Runtime error display
 - Stop
@@ -2041,7 +2011,6 @@ A minimal static page performs the complete browser compilation and execution cy
 ### Deliverables
 
 - Console output
-- STDIN buffer
 - Runtime exceptions
 - Run and Stop
 - Timeout
@@ -2223,18 +2192,17 @@ Do not include third-party analytics.
 - Simpler CSP
 - Smaller payload
 
-## ADR-008: Buffered STDIN
+## ADR-008: No program input
 
 ### Decision
 
-Collect the complete STDIN value before execution.
+Provide no program input. Console input is empty while a program runs.
 
 ### Reasons
 
-- Simpler browser-worker interaction
-- Predictable testing
-- Suitable for interview programs
+- Simpler worker and MCP request contracts
 - Avoids pretending to provide a fully interactive terminal
+- Programs are self-contained
 
 ---
 
@@ -2255,10 +2223,10 @@ Collect the complete STDIN value before execution.
 **Impact:** Critical
 **Mitigation:** Use a disposable Web Worker, execution timeout, and visible Stop action.
 
-## RISK-004: STDIN is not fully interactive
+## RISK-004: Programs cannot read input
 
-**Impact:** Medium
-**Mitigation:** Define buffered STDIN, test `Console.ReadLine`, and document limitations.
+**Impact:** Low
+**Mitigation:** Console input is empty so reads return `null`; document the limitation.
 
 ## RISK-005: GitHub Pages base paths break runtime assets
 
@@ -2350,8 +2318,7 @@ codedotnet/
 │       ├── 004-single-file-mvp.md
 │       ├── 005-web-worker.md
 │       ├── 006-github-pages.md
-│       ├── 007-no-analytics.md
-│       └── 008-buffered-stdin.md
+│       └── 007-no-analytics.md
 ├── src/
 │   ├── app/
 │   ├── components/
@@ -2435,7 +2402,7 @@ A requirement or feature is Done only when:
 ## Execution
 
 - [ ] `Console.WriteLine` works.
-- [ ] STDIN behavior is verified.
+- [ ] Console input is empty (reads return null).
 - [ ] Stop works.
 - [ ] Timeout works.
 - [ ] Output truncation works.
@@ -2523,7 +2490,7 @@ Recommended engineering discussion topics:
 - How Roslyn builds syntax trees and emits assemblies
 - How framework references are loaded
 - How diagnostics map to Monaco markers
-- How output and STDIN are redirected
+- How console output is redirected
 - Why Web Worker termination is used for hard cancellation
 - How GitHub Pages subpath deployment affects asset loading
 - How runtime/compiler assets are optimized and cached

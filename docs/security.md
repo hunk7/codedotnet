@@ -80,5 +80,5 @@ version-update runs above.
   sandboxed WebAssembly Web Worker in the user's own browser — it never executes on any server,
   and it has no network or filesystem access beyond what the browser sandbox and this CSP allow.
   There is no server-side component to compromise.
-- User source code and STDIN are persisted only to the browser's own `localStorage`, scoped to
+- User source code is persisted only to the browser's own `localStorage`, scoped to
   the site's origin; no data is transmitted anywhere.

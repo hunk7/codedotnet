@@ -8,7 +8,7 @@ using CodeDotNet.Contracts;
 
 namespace CodeDotNet.Ai.Services;
 
-public sealed record CodeRequest(string? Source, string? Stdin = null, bool? Run = null, string? Focus = null);
+public sealed record CodeRequest(string? Source, bool? Run = null, string? Focus = null);
 
 /// <summary>
 /// Review and debug workflows. The model sees Roslyn evidence (and, for debug, real sandbox
@@ -73,7 +73,7 @@ public sealed class CodeWorkflowService(
             {
                 try
                 {
-                    run = await sandbox.CompileAndRunAsync(source, request.Stdin ?? "", DefaultRunTimeoutMs, ct).ConfigureAwait(false);
+                    run = await sandbox.CompileAndRunAsync(source, DefaultRunTimeoutMs, ct).ConfigureAwait(false);
                 }
                 catch (Exception ex) when (ex is InvalidOperationException or System.Net.WebSockets.WebSocketException or OperationCanceledException && !ct.IsCancellationRequested)
                 {
@@ -165,7 +165,7 @@ public sealed class CodeWorkflowService(
         sb.AppendLine(debug ? "Task: find why this program fails or misbehaves." : "Task: review this program.");
         if (!string.IsNullOrWhiteSpace(focus))
         {
-            sb.Append("Focus: ").AppendLine(focus.Length > 500 ? focus[..500] : focus);
+            sb.Append("Focus: ").AppendLine(focus.Length > 1500 ? focus[..1500] : focus);
         }
 
         sb.AppendLine().AppendLine($"Compiles: {(evidence.Compiles ? "yes" : "no")}");

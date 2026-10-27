@@ -24,7 +24,7 @@ graph TD
 ## 2. Compile and execute behavior
 
 - `CompilerHost.Compile(source)`: one syntax tree named `Program.cs`, `LanguageVersion.Latest`, console application, Release, nullable enabled, unsafe disallowed, deterministic, `concurrentBuild: false`. References come from `Basic.Reference.Assemblies.Net100`. Only compiler diagnostics are produced; no semantic-model analysis or analyzers.
-- `ExecutionHost.Run`: loads the assembly, invokes the entry point by reflection, merges stdout and stderr into one buffer capped at 100,000 characters, feeds buffered stdin, and captures exception type/message/stack and exit code.
+- `ExecutionHost.Run`: loads the assembly, invokes the entry point by reflection, merges stdout and stderr into one buffer capped at 100,000 characters, and captures exception type/message/stack and exit code.
 - Statuses observed: `BuildFailed`, `ExecutionFailed`, `ExecutionCompleted`, `ExecutionCompletedWithWarnings`.
 
 ## 3. MCP sandbox

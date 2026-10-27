@@ -16,9 +16,9 @@ sequenceDiagram
   participant WM as WorkerManager
   participant W as worker.js
   participant H as CompileAndRunHost
-  UI->>WM: compileAndRun(source, stdin, timeout=5000)
+  UI->>WM: compileAndRun(source, timeout=5000)
   WM->>W: {protocolVersion:1, requestId, operation:CompileAndRun}
-  W->>H: CompileAndRun(source, stdin)
+  W->>H: CompileAndRun(source)
   H-->>W: JSON CompileAndRunResponse
   W-->>WM: Response event (requestId)
   WM-->>UI: CompileAndRunResponsePayload
@@ -28,9 +28,9 @@ sequenceDiagram
 
 `WorkerManager.stop()` terminates the worker; `recover()`/`initialize()` create a new one. On timeout the manager calls `stop()` then `initialize()`. Responses with a stale `requestId` are discarded.
 
-## 4. stdin [V]
+## 4. Program input [V]
 
-stdin is buffered as a string and passed with the request (ADR 008). `ExecutionHost` exposes it through a `StringReader`. On browser-wasm, `Console.In` can throw `PlatformNotSupportedException`; `ExecutionHost` handles this.
+The application provides no program input. `ExecutionHost` sets console input to an empty reader while the program runs, so `Console.ReadLine()` returns `null`. On browser-wasm, reading `Console.In` can throw `PlatformNotSupportedException`; `ExecutionHost` handles this.
 
 ## 5. Output and diagnostics [V]
 
@@ -54,7 +54,7 @@ sequenceDiagram
   C->>S: initialize
   S->>K: handleRequest
   C->>S: tools/list
-  C->>S: tools/call compile_and_run {source, stdin, timeoutMs}
+  C->>S: tools/call compile_and_run {source, timeoutMs}
   K->>P: compileAndRun
   P->>X: fork + message
   X-->>P: result (or SIGKILL at timeout)

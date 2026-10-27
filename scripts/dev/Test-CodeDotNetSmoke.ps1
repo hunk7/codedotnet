@@ -35,7 +35,7 @@ $code = $m.Matches[0].Groups[1].Value
 $pair = Invoke-RestMethod -Method Post "$b/pair" -ContentType application/json -Body (@{ code = $code } | ConvertTo-Json)
 Check 'pairing with printed code' ([bool]$pair.token)
 $h = @{ Authorization = "Bearer $($pair.token)" }
-Check 'code is single-use (reuse -> 401)' ((Status { Invoke-RestMethod -Method Post "$b/pair" -ContentType application/json -Body (@{ code = $code } | ConvertTo-Json) }) -eq 401)
+Check 'code is reusable for its lifetime (re-pair -> 200)' ((Status { Invoke-RestMethod -Method Post "$b/pair" -ContentType application/json -Body (@{ code = $code } | ConvertTo-Json) }) -eq 200)
 
 Check 'status with token' ((Status { Invoke-RestMethod "$b/status" -Headers $h }) -eq 200)
 Check 'loopback Origin allowed' ((Status { Invoke-RestMethod "$b/status" -Headers ($h + @{ Origin = 'http://localhost:5173' }) }) -eq 200)

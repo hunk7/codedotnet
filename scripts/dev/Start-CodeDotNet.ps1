@@ -9,12 +9,16 @@
   Force a resource profile (low-resource or recommended).
 .PARAMETER GpuMode
   off, auto (default) or on. CPU is used unless 'on'.
+.PARAMETER AllowedOrigin
+  Extra browser origin(s) allowed to call the local services, for example the hosted GitHub Pages
+  site: -AllowedOrigin https://hunk7.github.io (local dev origins are always kept).
 #>
 [CmdletBinding()]
 param(
     [switch]$NoFrontend,
     [string]$Profile,
-    [ValidateSet('off', 'auto', 'on')][string]$GpuMode = 'auto'
+    [ValidateSet('off', 'auto', 'on')][string]$GpuMode = 'auto',
+    [string[]]$AllowedOrigin = @()
 )
 
 $ErrorActionPreference = 'Stop'
@@ -73,6 +77,11 @@ if (Get-Command ollama -ErrorAction SilentlyContinue) {
 
 # 2. Sandbox
 $sandboxDir = Join-Path $repoRoot 'codedotnet-sandbox'
+if ($AllowedOrigin.Count -gt 0) {
+    $localOrigins = @('http://localhost:5173', 'http://127.0.0.1:5173')
+    $env:MCP_ALLOWED_ORIGIN = (($localOrigins + $AllowedOrigin) -join ',')
+    for ($i = 0; $i -lt $AllowedOrigin.Count; $i++) { Set-Item -Path "Env:Ai__AllowedOrigins__$i" -Value $AllowedOrigin[$i] }
+}
 if (-not (Test-Port -Port 7900)) {
     Write-Host 'Starting sandbox WebSocket server on 127.0.0.1:7900...'
     Start-Logged -Name 'sandbox' -File 'node' -Arguments @('src/wsServer.mjs') -WorkingDirectory $sandboxDir | Out-Null
@@ -113,5 +122,5 @@ Write-Host 'CodeDotNet is up.'
 Write-Host '  Sandbox : ws://127.0.0.1:7900'
 Write-Host '  AI      : http://127.0.0.1:7901/v1'
 if (-not $NoFrontend) { Write-Host '  Frontend: http://localhost:5173' }
-if ($code) { Write-Host "  Pairing code: $code (expires after 30 minutes; a new one is logged after each use)" }
+if ($code) { Write-Host "  Pairing code: $code  (valid 30 minutes; the same code can be reused until then)" }
 Write-Host 'Stop with scripts/dev/Stop-CodeDotNet.ps1. Check with scripts/dev/Test-CodeDotNetHealth.ps1.'

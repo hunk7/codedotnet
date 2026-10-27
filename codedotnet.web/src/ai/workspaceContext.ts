@@ -15,9 +15,9 @@ export interface AiWorkspaceContext {
   lastRun: AiLastRun | null
 }
 
-// Mirror the service limits (question 8000 chars, focus 500 chars).
+// Mirror the service limits (question 8000 chars, focus 1500 chars).
 export const MAX_QUESTION_CHARS = 8000
-export const MAX_FOCUS_CHARS = 500
+export const MAX_FOCUS_CHARS = 1500
 
 function clip(text: string, max: number): string {
   return text.length <= max ? text : text.slice(0, Math.max(0, max - 1)) + '…'
@@ -35,7 +35,7 @@ export function describeRun(run: AiLastRun, maxOutput: number): string {
 
 /** Short description of the last run, sized for the service's `focus` field. */
 export function buildRunFocus(run: AiLastRun | null): string | undefined {
-  return run ? clip(describeRun(run, 250), MAX_FOCUS_CHARS) : undefined
+  return run ? clip(describeRun(run, 1000), MAX_FOCUS_CHARS) : undefined
 }
 
 /** Prefixes a free-form question with the current code and last run, within the question size limit. */

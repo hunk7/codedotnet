@@ -120,14 +120,14 @@ public class ApiSecurityTests
     }
 
     [Fact]
-    public async Task Pair_CodeIsSingleUse()
+    public async Task Pair_CodeIsReusableUntilItExpires()
     {
         await using var server = new AiServer();
         using var client = server.CreateClient();
         var code = server.Pairing.CurrentCode;
         Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/v1/pair", new { code })).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/v1/pair", new { code })).StatusCode);
-        Assert.NotEqual(code, server.Pairing.CurrentCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/v1/pair", new { code })).StatusCode);
+        Assert.Equal(code, server.Pairing.CurrentCode);
     }
 
     [Fact]
@@ -171,6 +171,20 @@ public class ApiSecurityTests
         var response = await client.SendAsync(request);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("http://localhost:5173", response.Headers.GetValues("Access-Control-Allow-Origin").Single());
+    }
+
+    [Fact]
+    public async Task Preflight_FromLoopbackOrigin_AnswersPrivateNetworkAccessRequest()
+    {
+        await using var server = new AiServer();
+        using var client = server.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Options, "/v1/pair");
+        request.Headers.Add("Origin", "http://localhost:5173");
+        request.Headers.Add("Access-Control-Request-Method", "POST");
+        request.Headers.Add("Access-Control-Request-Private-Network", "true");
+        var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal("true", response.Headers.GetValues("Access-Control-Allow-Private-Network").Single());
     }
 
     [Fact]
@@ -369,15 +383,19 @@ public class PairingServiceTests
     }
 
     [Fact]
-    public void Code_ChangesAfterSuccessfulPairing()
+    public void Code_StaysReusableAfterSuccessfulPairing()
     {
-        var svc = Create(new FakeTime());
+        var time = new FakeTime();
+        var svc = Create(time);
         var first = svc.CurrentCode;
         Assert.True(svc.TryPair(first).Success);
-        var second = svc.CurrentCode;
-        Assert.NotEqual(first, second);
+        Assert.Equal(first, svc.CurrentCode);
+        var again = svc.TryPair(first);
+        Assert.True(again.Success);
+        time.Advance(PairingService.CodeLifetime - TimeSpan.FromSeconds(1));
+        Assert.True(svc.TryPair(first).Success);
+        time.Advance(TimeSpan.FromSeconds(2));
         Assert.False(svc.TryPair(first).Success);
-        Assert.True(svc.TryPair(second).Success);
     }
 
     [Fact]

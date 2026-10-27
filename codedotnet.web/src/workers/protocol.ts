@@ -31,7 +31,6 @@ export interface RuntimeInformation {
 
 export interface CompileAndRunRequestPayload {
   source: string
-  stdin: string
 }
 
 export type ExecutionStatus =

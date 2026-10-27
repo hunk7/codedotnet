@@ -46,7 +46,6 @@ const STORAGE_VERSION = 1
 
 const KEYS = {
   source: 'codedotnet.source',
-  stdin: 'codedotnet.stdin',
   editorSettings: 'codedotnet.editor.settings',
   layoutSettings: 'codedotnet.layout.settings',
   theme: 'codedotnet.theme',
@@ -227,20 +226,11 @@ export function saveSource(content: string): boolean {
   return writeJson(KEYS.source, record)
 }
 
-export function loadStdin(): string {
-  const stored = readJson<string>(KEYS.stdin)
-  return typeof stored === 'string' ? stored : ''
-}
-
-export function saveStdin(value: string): boolean {
-  return writeJson(KEYS.stdin, value)
-}
-
 export function isLocalStorageAvailable(): boolean {
   return isStorageAvailable()
 }
 
-/** Clears all codedotnet-owned localStorage keys (settings, layout, theme, source, stdin). */
+/** Clears all codedotnet-owned localStorage keys (settings, layout, theme, source). */
 export function clearAllLocalData(): void {
   if (!isStorageAvailable()) {
     return

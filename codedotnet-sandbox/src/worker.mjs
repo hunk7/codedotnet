@@ -38,7 +38,7 @@ process.on('message', (message) => {
     return
   }
 
-  const { requestId, source, stdin } = message
+  const { requestId, source } = message
 
   if (!assemblyExports) {
     process.send({
@@ -50,10 +50,7 @@ process.on('message', (message) => {
   }
 
   try {
-    const json = assemblyExports.CodeDotNet.Compiler.CompileAndRunHost.CompileAndRun(
-      source ?? '',
-      stdin ?? '',
-    )
+    const json = assemblyExports.CodeDotNet.Compiler.CompileAndRunHost.CompileAndRun(source ?? '')
     process.send({ type: 'result', requestId, payload: JSON.parse(json) })
   } catch (err) {
     process.send({

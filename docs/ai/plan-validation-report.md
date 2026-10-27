@@ -38,7 +38,7 @@ Scope: documentation-only PR on branch `codedotnet-mcp-platform`. Results below 
 | `npm test` (`codedotnet.web`) | **Pass**: 8 files, 35 tests |
 | `npm test` (`codedotnet-sandbox`) | **Fail**: `node --test test/` exits 1 with `Cannot find module '...\codedotnet-sandbox\test'` under Node v22.14.0 on Windows. This is a pre-existing script problem, not caused by this PR. |
 | `node --test test/server.test.mjs test/wsServer.test.mjs` (`codedotnet-sandbox`) | **Pass**: 6 tests, 0 failures (worker assets were already present locally) |
-| Markdown relative-link check over `docs/context`, `docs/ai`, `docs/adr` | Only pre-existing break found: `docs/adr/008-buffered-stdin.md` -> `../../codedotnet.compiler.tests/ExecutionHostTests.cs` (stale path, not modified). Links to this report resolve once it exists. |
+| Markdown relative-link check over `docs/context`, `docs/ai`, `docs/adr` | No broken links found. Links to this report resolve once it exists. |
 | JSON parse of `thresholds.json` and `result.schema.json` | Pass (parses; schema semantics not validated by a validator) |
 | Path/symbol checks | `CompilerHost.cs`, `ExecutionHost.cs`, `CompileAndRunOrchestrator.cs` exist in `CodeDotNet.Engine/`; `RuntimeInfo.cs` exists in both `CodeDotNet.Engine/` and `codedotnet.compiler/`; `PORT` 7900 and `HOST` 127.0.0.1 in `wsServer.mjs`; `DEFAULT_POOL_SIZE = 2`, `DEFAULT_TIMEOUT_MS = 10_000` in `workerPool.mjs`; CSP `connect-src 'self' ws://127.0.0.1:* ws://localhost:*` in `index.html` |
 
@@ -54,8 +54,7 @@ Scope: documentation-only PR on branch `codedotnet-mcp-platform`. Results below 
 ## 3. Newly discovered inconsistencies
 
 1. `npm test` in `codedotnet-sandbox` fails on Windows/Node 22.14.0 because `node --test test/` treats `test/` as a module path; running the files explicitly works. The Phase 0 CI step must use a glob or explicit file list (for example `node --test test/*.test.mjs`; needs to be verified on Linux CI).
-2. `docs/adr/008-buffered-stdin.md` links to a stale `codedotnet.compiler.tests` path.
-3. The CSP in `index.html` has `default-src 'self'` and no `http://` loopback entry, which the AI service would need.
+2. The CSP in `index.html` has `default-src 'self'` and no `http://` loopback entry, which the AI service would need.
 4. The feasibility document remains untracked and unchanged.
 
 Items from the earlier inventory (stale docs paths, SEC-01..SEC-11) are in [`../context/security-and-privacy-baseline.md`](../context/security-and-privacy-baseline.md) and [`../context/documentation-index.md`](../context/documentation-index.md).

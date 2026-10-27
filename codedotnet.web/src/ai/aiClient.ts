@@ -37,7 +37,6 @@ export type AiWorkflow = 'review' | 'debug' | 'tests'
 
 export interface AiCodeRequest {
   source: string
-  stdin?: string
   run?: boolean
   focus?: string
 }

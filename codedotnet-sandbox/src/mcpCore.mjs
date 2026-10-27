@@ -16,7 +16,6 @@ export const TOOLS = [
       type: 'object',
       properties: {
         source: { type: 'string', description: 'C# top-level-statement program source.' },
-        stdin: { type: 'string', description: 'Buffered standard input for the program.', default: '' },
         timeoutMs: {
           type: 'number',
           description: 'Hard execution timeout in milliseconds before the sandbox process is killed.',
@@ -78,7 +77,6 @@ export function createRequestHandler(pool, { onShutdown, maxTimeoutMs = DEFAULT_
 
           const response = await pool.compileAndRun({
             source: args.source,
-            stdin: typeof args.stdin === 'string' ? args.stdin : '',
             timeoutMs: clampTimeout(args.timeoutMs, maxTimeoutMs),
           })
 

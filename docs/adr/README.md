@@ -14,7 +14,6 @@ per the proposed repository structure in §28.
 | [005](005-dedicated-web-worker.md) | Dedicated Web Worker |
 | [006](006-github-pages.md) | GitHub Pages |
 | [007](007-no-analytics-v1.md) | No analytics in Version 1 |
-| [008](008-buffered-stdin.md) | Buffered STDIN |
 | [009](009-local-first-ai-runtime.md) | Local-first AI runtime (proposed) |
 | [010](010-ai-provider-abstraction.md) | AI provider abstraction (proposed) |
 | [011](011-rag-storage-and-retrieval.md) | RAG storage and retrieval (proposed) |

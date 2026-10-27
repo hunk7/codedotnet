@@ -16,9 +16,9 @@ namespace CodeDotNet.Compiler;
 public partial class CompileAndRunHost
 {
     [JSExport]
-    internal static string CompileAndRun(string source, string stdin)
+    internal static string CompileAndRun(string source)
     {
-        var response = CodeDotNet.Engine.CompileAndRunOrchestrator.CompileAndRun(source, stdin);
+        var response = CodeDotNet.Engine.CompileAndRunOrchestrator.CompileAndRun(source);
         return JsonSerializer.Serialize(response, CodeDotNetJsonContext.Default.CompileAndRunResponse);
     }
 }

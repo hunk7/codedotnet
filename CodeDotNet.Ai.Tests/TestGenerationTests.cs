@@ -21,7 +21,7 @@ public class TestGenerationTests
     {
         public List<string> Sources { get; } = [];
 
-        public Task<CompileAndRunResponse> CompileAndRunAsync(string source, string stdin, int timeoutMs, CancellationToken ct)
+        public Task<CompileAndRunResponse> CompileAndRunAsync(string source, int timeoutMs, CancellationToken ct)
         {
             Sources.Add(source);
             return Task.FromResult(respond(source));

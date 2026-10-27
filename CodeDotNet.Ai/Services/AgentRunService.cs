@@ -205,7 +205,7 @@ public sealed class AgentRunService(
 
                     try
                     {
-                        result = await sandbox.CompileAndRunAsync(code, "", RunTimeoutMs, ct).ConfigureAwait(false);
+                        result = await sandbox.CompileAndRunAsync(code, RunTimeoutMs, ct).ConfigureAwait(false);
                     }
                     catch (Exception ex) when (ex is InvalidOperationException or System.Net.WebSockets.WebSocketException or HttpRequestException)
                     {

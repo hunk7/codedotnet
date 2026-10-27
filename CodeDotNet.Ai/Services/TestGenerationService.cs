@@ -30,7 +30,7 @@ public sealed partial class TestGenerationService(
         "No external packages or test frameworks. For each test print 'PASS: <name>' or 'FAIL: <name>: <reason>'. " +
         "If any test fails, return exit code 1; otherwise 0. Test only behavior you can see in the code. Do not invent APIs.";
 
-    [GeneratedRegex(@"```(?:csharp|cs|c#)?[ \t]*\r?\n(.*?)```", RegexOptions.Singleline | RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"```(?:csharp|cs|c#)?[ \t]*\r?\n(.*?)(?:```|\z)", RegexOptions.Singleline | RegexOptions.IgnoreCase)]
     private static partial Regex FenceRx();
 
     public int MaxAttempts => Math.Clamp(profile.AgentDefaultIterations, 1, MaxAttemptsCap);
@@ -140,7 +140,7 @@ public sealed partial class TestGenerationService(
             string? sandboxError = null;
             try
             {
-                run = await sandbox.CompileAndRunAsync(code, "", RunTimeoutMs, ct).ConfigureAwait(false);
+                run = await sandbox.CompileAndRunAsync(code, RunTimeoutMs, ct).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is InvalidOperationException or System.Net.WebSockets.WebSocketException or HttpRequestException)
             {
@@ -211,7 +211,7 @@ public sealed partial class TestGenerationService(
         var sb = new StringBuilder("Write tests for this program. Include the original code verbatim.\n");
         if (!string.IsNullOrWhiteSpace(focus))
         {
-            sb.Append("Focus: ").AppendLine(focus.Length > 500 ? focus[..500] : focus);
+            sb.Append("Focus: ").AppendLine(focus.Length > 1500 ? focus[..1500] : focus);
         }
 
         sb.AppendLine("```csharp").AppendLine(source).AppendLine("```");

@@ -113,7 +113,7 @@ export class WorkerPool {
    * timeout via SIGKILL. Resolves with either the engine's CompileAndRunResponse JSON
    * payload, or a synthetic timed-out response if the worker did not respond in time.
    */
-  async compileAndRun({ source, stdin = '', timeoutMs = this.defaultTimeoutMs }) {
+  async compileAndRun({ source, timeoutMs = this.defaultTimeoutMs }) {
     if (this.closed) {
       throw new Error('Worker pool is closed')
     }
@@ -212,7 +212,7 @@ export class WorkerPool {
 
       worker.on('result', onResult)
       worker.on('exit', onExit)
-      worker.child.send({ type: 'compile_and_run', requestId, source, stdin })
+      worker.child.send({ type: 'compile_and_run', requestId, source })
     })
   }
 

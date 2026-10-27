@@ -39,6 +39,12 @@ public sealed class OllamaProvider(HttpClient http) : IChatProvider, IEmbeddingP
         using var response = await http
             .SendAsync(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            throw new InvalidOperationException(
+                $"Ollama does not have the chat model '{request.Options.Model}'. Run 'ollama pull {request.Options.Model}' or set Ai:ChatModel to an installed model (see 'ollama list').");
+        }
+
         response.EnsureSuccessStatusCode();
 
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);

@@ -10,7 +10,7 @@ namespace CodeDotNet.Engine;
 /// </summary>
 public static class CompileAndRunOrchestrator
 {
-    public static CompileAndRunResponse CompileAndRun(string source, string stdin)
+    public static CompileAndRunResponse CompileAndRun(string source)
     {
         var stopwatch = Stopwatch.StartNew();
         var compileStopwatch = Stopwatch.StartNew();
@@ -69,7 +69,7 @@ public static class CompileAndRunOrchestrator
 
         try
         {
-            executionResult = ExecutionHost.Run(compileResult.AssemblyBytes, stdin);
+            executionResult = ExecutionHost.Run(compileResult.AssemblyBytes);
         }
         catch (Exception ex)
         {

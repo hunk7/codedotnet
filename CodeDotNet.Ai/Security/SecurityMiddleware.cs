@@ -45,6 +45,10 @@ public sealed class SecurityMiddleware(RequestDelegate next, AiOptions options, 
             headers.Vary = "Origin";
             headers.AccessControlAllowHeaders = "Authorization, Content-Type";
             headers.AccessControlAllowMethods = "GET, POST, DELETE, OPTIONS";
+            if (context.Request.Headers.ContainsKey("Access-Control-Request-Private-Network"))
+            {
+                headers["Access-Control-Allow-Private-Network"] = "true";
+            }
         }
 
         if (HttpMethods.IsOptions(context.Request.Method))

@@ -150,7 +150,7 @@ The application MUST detect unavailable Ollama/Qdrant services, report actionabl
 
 ### 6.3 AI Debugging Assistant
 
-- Uses source code, compiler diagnostics, stdout, stderr, stack trace, timing, stdin, and recent edit diff.
+- Uses source code, compiler diagnostics, stdout, stderr, stack trace, timing, and recent edit diff.
 - Produces root-cause hypotheses, evidence, fix options, and a validated patch where possible.
 - Re-runs code only with explicit or configured bounded agent permission.
 
@@ -413,7 +413,7 @@ Connects through MCP, discovers tools, submits a coding goal, observes bounded t
 
 ### 4.7 Debugging
 
-- **FR-DBG-001:** Debug context MUST include compiler diagnostics, runtime exception, stack trace, stdout/stderr, stdin, timings, and active source.
+- **FR-DBG-001:** Debug context MUST include compiler diagnostics, runtime exception, stack trace, stdout/stderr, timings, and active source.
 - **FR-DBG-002:** The response MUST distinguish observed facts, hypotheses, and proposed validation steps.
 - **FR-DBG-003:** Automated reruns MUST use bounded attempts and retain an iteration timeline.
 - **FR-DBG-004:** The system MUST detect repeated equivalent failures and stop the loop.

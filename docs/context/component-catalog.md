@@ -8,8 +8,8 @@
 | `DiagnosticInfo` | `CodeDotNet.Contracts/` | DTO | n/a | JSON | n/a | via Engine tests | [V] |
 | `CodeDotNetJsonContext` | `CodeDotNet.Contracts/` | Source-generated JSON | DTOs | JSON | System.Text.Json | indirect | [V] |
 | `CompilerHost` | `CodeDotNet.Engine/CompilerHost.cs` | Roslyn host | `string source` | `CompileResult` (assembly bytes, diagnostics) | Roslyn 4.14.0, Basic.Reference.Assemblies.Net100 | `CompilerHostTests` | [V] |
-| `ExecutionHost` | `CodeDotNet.Engine/ExecutionHost.cs` | Runner | assembly bytes, stdin | `ExecutionResult` | reflection, Console | `ExecutionHostTests` | [V] |
-| `CompileAndRunOrchestrator` | `CodeDotNet.Engine/CompileAndRunOrchestrator.cs` | Orchestrator | source, stdin | `CompileAndRunResponse` | CompilerHost, ExecutionHost | `CompileAndRunOrchestratorTests` | [V] |
+| `ExecutionHost` | `CodeDotNet.Engine/ExecutionHost.cs` | Runner | assembly bytes | `ExecutionResult` | reflection, Console | `ExecutionHostTests` | [V] |
+| `CompileAndRunOrchestrator` | `CodeDotNet.Engine/CompileAndRunOrchestrator.cs` | Orchestrator | source | `CompileAndRunResponse` | CompilerHost, ExecutionHost | `CompileAndRunOrchestratorTests` | [V] |
 | `RuntimeInfo` | `CodeDotNet.Engine/`, `codedotnet.compiler/` | Info | n/a | `RuntimeInformationPayload` | n/a | not confirmed | [V] |
 | `CompileAndRunHost` | `codedotnet.compiler/CompileAndRunHost.cs` | JS interop | JS strings | JSON string | Engine, Contracts | none (browser/sandbox E2E only) | [V] |
 | `worker.js` | `codedotnet.compiler/wwwroot/worker.js` | Web Worker | postMessage | typed envelopes | `_framework/dotnet.js` | `scripts/validate-worker.cjs` (not confirmed in CI) | [V] |
@@ -20,10 +20,10 @@
 | `complexity.ts` | `codedotnet.web/src/complexity.ts` | Heuristic | source | estimate | none | `complexity.test` | [V] |
 | `editorSettings.ts` | `codedotnet.web/src/editor/editorSettings.ts` | Settings | localStorage | settings | none | `editorSettings.test` | [V] |
 | `mcpCore.mjs` | `codedotnet-sandbox/src/` | Dispatcher | JSON-RPC | JSON-RPC | WorkerPool | `server.test.mjs`, `wsServer.test.mjs` | [V] |
-| `workerPool.mjs` | `codedotnet-sandbox/src/` | Process pool | source, stdin, timeout | result | `worker.mjs` | same | [V] |
+| `workerPool.mjs` | `codedotnet-sandbox/src/` | Process pool | source, timeout | result | `worker.mjs` | same | [V] |
 | `worker.mjs` | `codedotnet-sandbox/src/` | Child worker | IPC | IPC | published wasm | same | [V] |
 | `wsServer.mjs` | `codedotnet-sandbox/src/` | WS transport | WS frames | WS frames | ws, mcpCore | `wsServer.test.mjs` | [V] |
-| `server.mjs` | `codedotnet-sandbox/src/` | stdio transport | stdin lines | stdout lines | mcpCore | `server.test.mjs` | [V] |
+| `server.mjs` | `codedotnet-sandbox/src/` | stdio transport | JSON-RPC lines in | JSON-RPC lines out | mcpCore | `server.test.mjs` | [V] |
 | `deploy.yml` | `.github/workflows/` | CI/CD | push/PR | Pages | .NET 10, Node 22 | n/a | [V] |
 | `CodeDotNet.Ai` | `CodeDotNet.Ai/` | Service | HTTP | JSON, SSE | Engine, Contracts, Ollama, SQLite | `CodeDotNet.Ai.Tests` | [P] |
 | `IModelProvider` | `CodeDotNet.Ai.Abstractions/` | Interface | prompts | tokens | n/a | contract tests | [P] |

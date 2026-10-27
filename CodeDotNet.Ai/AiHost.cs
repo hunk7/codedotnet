@@ -78,7 +78,13 @@ public static class AiApp
         {
             var hardware = sp.GetRequiredService<IHardwareProbe>().ProbeAsync().GetAwaiter().GetResult();
             var resolved = sp.GetRequiredService<IProfileResolver>().Resolve(hardware, new ProfileOverrides(options.Profile));
-            return options.ApplyOverrides(resolved);
+            var profile = options.ApplyOverrides(resolved);
+            if (string.IsNullOrWhiteSpace(options.ChatModel) && sp.GetRequiredService<IChatProvider>() is OllamaProvider ollama)
+            {
+                profile = UseInstalledChatModel(profile, ollama, sp.GetRequiredService<ILoggerFactory>().CreateLogger("CodeDotNet.Ai"));
+            }
+
+            return profile;
         });
 
         configureServices?.Invoke(builder.Services);
@@ -153,7 +159,7 @@ public static class AiApp
 
             return result.CodeExpiredOrLocked
                 ? ApiErrors.Error(StatusCodes.Status403Forbidden, "pairing_code_expired", "Pairing code expired or locked. Use the newest code printed by the service.")
-                : ApiErrors.Error(StatusCodes.Status401Unauthorized, "pairing_failed", "Invalid pairing code. Codes are single-use; enter the newest code printed by the service.");
+                : ApiErrors.Error(StatusCodes.Status401Unauthorized, "pairing_failed", "Invalid pairing code. Enter the current code printed by the service (it stays valid for 30 minutes).");
         });
 
         v1.MapGet("/status", async (IChatProvider chat, ResourceProfile profile, AiOptions options, CancellationToken ct) =>
@@ -299,6 +305,37 @@ public static class AiApp
 
             await Sse.WriteAsync(http.Response, run(svc, body!, http.RequestAborted), http.RequestAborted);
         });
+    }
+
+    private static ResourceProfile UseInstalledChatModel(ResourceProfile profile, OllamaProvider ollama, ILogger logger)
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var caps = ollama.GetCapabilitiesAsync(cts.Token).GetAwaiter().GetResult();
+            if (!caps.Reachable || HasModel(caps, profile.ChatModel))
+            {
+                return profile;
+            }
+
+            var chatModels = caps.Models
+                .Where(m => !m.Name.Contains("embed", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(m => m.Name.Contains("coder", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                .ToList();
+            if (chatModels.Count == 0)
+            {
+                return profile;
+            }
+
+            logger.LogWarning(
+                "Chat model '{Wanted}' is not installed in Ollama; using installed model '{Using}'. Run 'ollama pull {Wanted}' for the recommended model.",
+                profile.ChatModel, chatModels[0].Name, profile.ChatModel);
+            return profile with { ChatModel = chatModels[0].Name };
+        }
+        catch (Exception ex) when (ex is OperationCanceledException or HttpRequestException)
+        {
+            return profile;
+        }
     }
 
     private static bool HasModel(ProviderCapabilities caps, string model) =>

@@ -3,13 +3,10 @@
 codedotnet is intentionally scoped as a single-file, browser-only C# playground. This document
 lists deliberate constraints of version 1 so users and contributors have accurate expectations.
 
-## Buffered STDIN only
+## No program input
 
-STDIN is provided as a single, fully-buffered text block entered before clicking **Run**
-(`codedotnet.compiler/ExecutionHost.cs`, `Run(byte[] assemblyBytes, string stdin)`). There is no
-interactive/streaming STDIN: a program cannot prompt the user and receive input mid-execution.
-All `Console.ReadLine()`/`Console.Read()` calls consume from the pre-supplied buffer, and reading
-past the end of that buffer behaves like reaching end-of-input.
+Programs cannot prompt for or receive input. While a program runs, console input is empty, so
+`Console.ReadLine()` returns `null`. Write programs that take their data from constants or code.
 
 ## Single-file constraint
 

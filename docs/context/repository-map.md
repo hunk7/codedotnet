@@ -14,7 +14,7 @@ codedotnet/
 ├── codedotnet.web/                  [V] React/Vite frontend (not in the .slnx)
 │   └── public/dotnet-worker/        [G] published wasm artifact (untracked)
 ├── codedotnet-sandbox/              [V] Node MCP server (not in the .slnx)
-├── scripts/                         [V] copy-worker-assets.ps1, run-worker-script.cjs, validate-worker.cjs, spike-*.mjs
+run-worker-script.cjs, validate-worker.cjs
 ├── docs/                            [V] architecture, security, privacy, testing, ADRs, research
 ├── .github/                         [V] workflows/deploy.yml, dependabot.yml
 ├── CodeDotNet.Ai/                   [P] native .NET 10 orchestrator (loopback HTTP+SSE)
@@ -48,7 +48,7 @@ Proposed addition **[P]**: `CodeDotNet.Ai` references `CodeDotNet.Engine` and `C
 | `CodeDotNet.Engine/CompilerHost.cs` | Roslyn compile of one syntax tree (`Program.cs`) |
 | `CodeDotNet.Engine/ExecutionHost.cs` | Loads and runs the emitted assembly; merged stdout/stderr; 100,000-char output cap |
 | `CodeDotNet.Engine/CompileAndRunOrchestrator.cs` | Compile then run; returns `CompileAndRunResponse` |
-| `codedotnet.compiler/CompileAndRunHost.cs` | `[JSExport] CompileAndRun(source, stdin)` |
+| `codedotnet.compiler/CompileAndRunHost.cs` | `[JSExport] CompileAndRun(source)` |
 | `codedotnet.compiler/wwwroot/worker.js` | Worker: `GetRuntimeInformation` / `CompileAndRun` |
 | `codedotnet.web/src/workers/workerManager.ts` | Worker lifecycle, timeout, stop/recover |
 | `codedotnet.web/src/workers/protocol.ts` | Typed message protocol (`PROTOCOL_VERSION = 1`) |

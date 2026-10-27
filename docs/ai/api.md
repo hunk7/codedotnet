@@ -6,7 +6,7 @@ Base URL: `http://127.0.0.1:7901/v1` (loopback only; configurable with `Ai:Host`
 
 ## Authentication
 
-`/v1/health` and `/v1/pair` are open. Every other route needs `Authorization: Bearer <token>` and an allowed `Origin` (or no `Origin`, for non-browser clients). The token comes from `POST /v1/pair` with the code the service prints at startup (valid 30 minutes; a fresh code is printed after each use or expiry). The browser client keeps the token in memory only.
+(valid 30 minutes and reusable until then; a fresh code is printed after it expires or is locked by too many wrong attempts)
 
 ## Routes
 

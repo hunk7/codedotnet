@@ -17,7 +17,7 @@ public sealed class WebSocketSandboxClient(AiOptions options) : ISandboxClient
     private const int MaxMessageBytes = 2 * 1024 * 1024;
 
     public async Task<CompileAndRunResponse> CompileAndRunAsync(
-        string source, string stdin, int timeoutMs, CancellationToken cancellationToken = default)
+        string source, int timeoutMs, CancellationToken cancellationToken = default)
     {
         using var socket = new ClientWebSocket();
         using var overall = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -30,7 +30,7 @@ public sealed class WebSocketSandboxClient(AiOptions options) : ISandboxClient
             jsonrpc = "2.0",
             id = 1,
             method = "tools/call",
-            @params = new { name = "compile_and_run", arguments = new { source, stdin, timeoutMs } },
+            @params = new { name = "compile_and_run", arguments = new { source, timeoutMs } },
         });
         await socket.SendAsync(Encoding.UTF8.GetBytes(request), WebSocketMessageType.Text, true, overall.Token).ConfigureAwait(false);
 

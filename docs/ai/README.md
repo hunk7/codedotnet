@@ -1,6 +1,8 @@
 # CodeDotNet AI Documentation
 
-Status: **Phases 0-8 implemented and validated offline. Not validated with a real Ollama model, a live Qdrant, a GPU, real browsers over HTTPS, or benchmark runs. See [`plan-validation-report.md`](plan-validation-report.md).**
+Start with the [root README](../../README.md) for setup and the [demo video](../images/codenet.mp4) for a walkthrough.
+
+Status: **Phases 0-8 implemented. The full local stack (Ollama chat, pairing, review, debug, test generation, Ask, MCP sandbox) has been run end to end on a developer machine and is covered by automated tests. Not validated: GPU mode, a live Qdrant, real browsers over HTTPS, and benchmark runs. See [`plan-validation-report.md`](plan-validation-report.md).**
 
 | Document | Purpose | Status |
 |---|---|---|
@@ -11,6 +13,7 @@ Status: **Phases 0-8 implemented and validated offline. Not validated with a rea
 | [`hardware-and-resource-profiles.md`](hardware-and-resource-profiles.md) | Target device and profiles | Proposed |
 | [`benchmarks.md`](benchmarks.md) | Benchmark definitions and rules | Proposed |
 | [`local-setup.md`](local-setup.md) | Windows installation steps | Draft |
+| [`rag.md`](rag.md) | How RAG is used, with real output | Current |
 | [`operations.md`](operations.md) | Start/stop/health/backup runbook | Draft |
 | [`troubleshooting.md`](troubleshooting.md) | Windows troubleshooting | Draft |
 | `ai-srs.md`, `architecture.md`, `rag-design.md`, `agent-design.md`, `data-governance.md`, `threat-model.md`, `evaluation.md`, `api.md`, `model-governance.md` | Describe the implemented system | Current |
